@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 
+import org.apache.poi.util.TempFile;
 import org.fcrepo.utils.FedoraJcrTypes;
 import org.infinispan.schematic.document.Document;
 import org.modeshape.connector.filesystem.FileSystemConnector;
@@ -75,7 +76,9 @@ public class BagItConnector extends FileSystemConnector {
      */
     private String directoryPath;
 
-    private File m_directory;
+    // it appears to be the case that bootstrapping the federated nodes results in a pre-init call to the connector
+    // so this is a dummy file for that situation
+    private File m_directory = TempFile.createTempFile("stub", "stub");
 
     /**
      * A string that is created in the {@link #initialize(NamespaceRegistry, NodeTypeManager)} method that represents the absolute
@@ -148,7 +151,8 @@ public class BagItConnector extends FileSystemConnector {
         getLogger().trace("Entering getDocumentById()...");
         getLogger().debug("Received request for document: " + id);
         final File file = fileFor(id);
-        if (isExcluded(file) || !file.exists()) return null;
+        getLogger().debug("Received request for document: " + id + ", resolved to " + file);
+        if (file == null || isExcluded(file) || !file.exists()) return null;
         final boolean isRoot = isRoot(id);
         final boolean isResource = isContentNode(id);
         final DocumentWriter writer = newDocument(id);
@@ -314,7 +318,10 @@ public class BagItConnector extends FileSystemConnector {
         if (isContentNode(id)) {
             id = id.substring(0, id.length() - JCR_CONTENT_SUFFIX_LENGTH);
         }
-    	if ("".equals(id)) return this.m_directory; // root node
+    	if ("".equals(id)){
+    		getLogger().debug("#fileFor returning root directory for \"" + id + "\"");
+    		return this.m_directory; // root node
+    	}
     	
         if (isContentNode(id)) {
             id = id.substring(0, id.length() - JCR_CONTENT_SUFFIX_LENGTH);
@@ -341,7 +348,7 @@ public class BagItConnector extends FileSystemConnector {
     @Override
     protected boolean isExcluded(File file) {
     	//TODO this should check the data manifest
-    	return !file.exists();
+    	return file == null || !file.exists();
     }
     
     @Override
