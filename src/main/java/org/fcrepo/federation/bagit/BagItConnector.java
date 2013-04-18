@@ -40,7 +40,7 @@ public class BagItConnector extends FileSystemConnector {
 	
 	private static final String BAGIT_ARCHIVE_TYPE = "bagit:archive";
 	
-    private static final String FILE_SEPARATOR = File.separator;
+    private static final char JCR_PATH_DELIMITER_CHAR = '/'; // NOT THE File.pathSeparator;
 
     private static final String JCR_PATH_DELIMITER = "/"; // NOT THE File.pathSeparator;
 
@@ -58,7 +58,7 @@ public class BagItConnector extends FileSystemConnector {
 
     private static final String JCR_ENCODING = "jcr:encoding";
 
-    private static final String JCR_CONTENT_SUFFIX = FILE_SEPARATOR + JCR_CONTENT;
+    private static final String JCR_CONTENT_SUFFIX = JCR_PATH_DELIMITER + JCR_CONTENT;
 
     private static final int JCR_CONTENT_SUFFIX_LENGTH = JCR_CONTENT_SUFFIX.length();
 
@@ -123,10 +123,10 @@ public class BagItConnector extends FileSystemConnector {
         directoryAbsolutePath = m_directory.getAbsolutePath();
         getLogger().debug(
                 "Using filesystem directory: " + directoryAbsolutePath);
-        if (!directoryAbsolutePath.endsWith(FILE_SEPARATOR))
-            directoryAbsolutePath = directoryAbsolutePath + FILE_SEPARATOR;
+        if (!directoryAbsolutePath.endsWith(File.separator))
+            directoryAbsolutePath = directoryAbsolutePath + File.separator;
         directoryAbsolutePathLength =
-                directoryAbsolutePath.length() - FILE_SEPARATOR.length(); // does NOT include the separator
+                directoryAbsolutePath.length() - File.separator.length(); // does NOT include the separator
 
         setExtraPropertiesStore(new BagItExtraPropertiesStore(this));
         getLogger().trace("Initialized.");
@@ -171,7 +171,7 @@ public class BagItConnector extends FileSystemConnector {
                     // We use identifiers that contain the file/directory name ...
                     String childName = child.getName();
                     String childId =
-                            isRoot ? FILE_SEPARATOR + childName : id + FILE_SEPARATOR +
+                            isRoot ? File.separator + childName : id + File.separator +
                                     childName;
                     writer.addChild(childId, childName);
                 }
@@ -227,7 +227,7 @@ public class BagItConnector extends FileSystemConnector {
             getLogger().debug(
                     "Determined document: " + id + " to be a Fedora object.");
             final File dataDir =
-                    new File(file.getAbsolutePath() + FILE_SEPARATOR + "data");
+                    new File(new File(file.getAbsolutePath()),"data");
             getLogger().debug("searching data dir " + 
                     dataDir.getAbsolutePath());
             writer.setPrimaryType(NT_FOLDER);
@@ -256,7 +256,7 @@ public class BagItConnector extends FileSystemConnector {
                     // We use identifiers that contain the file/directory name ...
                     String childName = child.getName();
                     String childId =
-                            isRoot ? FILE_SEPARATOR + childName : id + FILE_SEPARATOR +
+                            isRoot ? File.separator + childName : id + File.separator +
                                     childName;
                     writer.addChild(childId, childName);
                 }
@@ -323,10 +323,10 @@ public class BagItConnector extends FileSystemConnector {
         Pattern p = Pattern.compile("^(\\/[^\\/]+)(\\/[^\\/]+)");
         Matcher m = p.matcher(id);
         if (m.find()) {
-        	id = id.replace(m.group(1), m.group(1) + FILE_SEPARATOR + "data");
+        	id = id.replace(m.group(1), m.group(1) + JCR_PATH_DELIMITER + "data"); // because we're going to swap the delims out for the system seperator
         }
 
-    	File result = new File(this.m_directory, id.replaceAll(JCR_PATH_DELIMITER, FILE_SEPARATOR));
+    	File result = new File(this.m_directory, id.replace(JCR_PATH_DELIMITER_CHAR, File.separatorChar));
     	getLogger().debug(result.getAbsolutePath());
         //return super.fileFor(id);
     	return result;
@@ -368,9 +368,9 @@ public class BagItConnector extends FileSystemConnector {
             throw new DocumentStoreException(path, msg);
         }
         String id = path.substring(directoryAbsolutePathLength);
-        id = id.replace("/data/", "/"); // data dir should be removed from the id of a DS node
-        if (id.endsWith("/data")) id = id.substring(0, id.length() - 5); // might also be the parent file of a DS node
-        id = id.replaceAll(Pattern.quote(FILE_SEPARATOR), JCR_PATH_DELIMITER);
+        id = id.replace(File.separator + "data" + File.separator, File.separator); // data dir should be removed from the id of a DS node
+        if (id.endsWith(File.separator + "data")) id = id.substring(0, id.length() - 5); // might also be the parent file of a DS node
+        id = id.replace(File.separatorChar, JCR_PATH_DELIMITER_CHAR);
         if ("".equals(id)) id = JCR_PATH_DELIMITER;
         assert id.startsWith(JCR_PATH_DELIMITER);
         System.out.println("idFor = " + id);

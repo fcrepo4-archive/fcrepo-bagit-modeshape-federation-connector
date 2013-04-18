@@ -78,18 +78,20 @@ public class BagItConnectorTest {
 	
 	@Test
 	public void testGetBagInfo() throws IOException {
-		new File(tempDir, "foo").mkdirs();
+		File foo = new File(tempDir, "foo");
+		foo.mkdirs();
 		BagInfo bi = testObj.getBagInfo("/foo");
 		assertTrue(bi == null);
-		touch(new File(tempDir, "foo/bag-info.txt"));
+		touch(new File(foo, "bag-info.txt"));
 		bi = testObj.getBagInfo("/foo");
 		assertNotNull(bi);
 	}
 	
 	@Test
 	public void getDocumentById() throws IOException {
-		new File(tempDir, "foo/data").mkdirs();
-		touch(new File(tempDir, "foo/data/bar"));
+		File data = new File(new File(tempDir, "foo"), "data");
+		data.mkdirs();
+		touch(new File(data, "bar"));
 		when(mockFactory.getDocumentWriter(any(String.class))).thenReturn(mockWriter);
 		testObj.getDocumentById("/foo");
 		verify(mockFactory).getDocumentWriter("/foo");
@@ -101,8 +103,9 @@ public class BagItConnectorTest {
 	
 	@Test
 	public void testFileFor() throws IOException {
-		new File(tempDir, "foo/data").mkdirs();
-		touch(new File(tempDir, "foo/data/bar"));
+		File data = new File(new File(tempDir, "foo"), "data");
+		data.mkdirs();
+		touch(new File(data, "bar"));
 		File result = testObj.fileFor("/foo/bar");
 		assertTrue(result.exists());
 		assertEquals(result.getParent(), tempDir.getAbsolutePath() + "/foo/data");
