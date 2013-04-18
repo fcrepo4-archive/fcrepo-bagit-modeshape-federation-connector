@@ -108,7 +108,7 @@ public class BagItConnectorTest {
 		touch(new File(data, "bar"));
 		File result = testObj.fileFor("/foo/bar");
 		assertTrue(result.exists());
-		assertEquals(result.getParent(), tempDir.getAbsolutePath() + "/foo/data");
+		assertEquals(result.getParent(), data.getAbsolutePath());
 	}
 	
 	@Test
