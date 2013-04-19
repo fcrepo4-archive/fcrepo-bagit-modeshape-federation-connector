@@ -3,13 +3,11 @@ package org.fcrepo.federation.bagit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import gov.loc.repository.bagit.utilities.TempFileHelper;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,7 +17,6 @@ import java.lang.reflect.Field;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 
-import org.apache.poi.util.TempFile;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +25,6 @@ import org.modeshape.jcr.ExecutionContext;
 import org.modeshape.jcr.api.nodetype.NodeTypeManager;
 import org.modeshape.jcr.federation.spi.Connector;
 import org.modeshape.jcr.federation.spi.DocumentWriter;
-import org.modeshape.jcr.value.ValueFactories;
 
 public class BagItConnectorTest {
 

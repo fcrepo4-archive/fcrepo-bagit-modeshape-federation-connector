@@ -1,7 +1,6 @@
 
 package org.fcrepo.federation.bagit;
 
-import static org.fcrepo.jaxb.responses.access.ObjectProfile.ObjectStates.A;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -19,7 +18,6 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.fcrepo.FedoraObject;
-import org.fcrepo.jaxb.responses.access.ObjectProfile;
 import org.fcrepo.services.PathService;
 import org.junit.Test;
 import org.modeshape.jcr.api.Session;
