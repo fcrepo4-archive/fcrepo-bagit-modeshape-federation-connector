@@ -68,7 +68,6 @@
       <artifactId>fcrepo-http-api</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
-      <type>test-jar</type>
     </dependency>
    <dependency>
       <groupId>org.fcrepo</groupId>

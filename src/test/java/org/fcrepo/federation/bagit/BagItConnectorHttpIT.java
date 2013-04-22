@@ -37,6 +37,8 @@ public class BagItConnectorHttpIT extends AbstractResourceIT {
         final String objName = "BagItFed1";
         final HttpResponse response =
                 client.execute(new HttpGet(serverAddress + "objects/" + objName));
+        String msg = EntityUtils.toString(response.getEntity());
+        System.out.println(msg);
         assertEquals(response.getStatusLine().getReasonPhrase(), 200, response
                 .getStatusLine().getStatusCode());
     }

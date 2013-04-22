@@ -1,6 +1,7 @@
 
 package org.fcrepo.federation.bagit;
 
+import static org.fcrepo.jaxb.responses.access.ObjectProfile.ObjectStates.A;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -20,6 +21,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.fcrepo.FedoraObject;
+import org.fcrepo.jaxb.responses.access.ObjectProfile;
 import org.fcrepo.services.PathService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,6 +56,18 @@ public class BagItConnectorIT {
 		nodes = child.getNodes();
 		assertEquals("jcr:content", nodes.nextNode().getName());
 		FedoraObject obj = new FedoraObject(session, PathService.getObjectJcrNodePath("BagItFed1"));
+        final ObjectProfile objectProfile = new ObjectProfile();
+        objectProfile.pid = obj.getName();
+        objectProfile.objLabel = obj.getLabel();
+        objectProfile.objOwnerId = obj.getOwnerId();
+        objectProfile.objCreateDate = obj.getCreated();
+        objectProfile.objLastModDate = obj.getLastModified();
+        objectProfile.objSize = obj.getSize();
+//        objectProfile.objItemIndexViewURL =
+//                uriInfo.getAbsolutePathBuilder().path("datastreams").build();
+        objectProfile.objState = A;
+        objectProfile.objModels = obj.getModels();
+		
 	}
 
 }

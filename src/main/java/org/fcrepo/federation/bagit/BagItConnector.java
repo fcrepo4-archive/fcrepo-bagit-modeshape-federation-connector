@@ -1,7 +1,6 @@
 
 package org.fcrepo.federation.bagit;
 
-import static org.fcrepo.utils.FedoraJcrTypes.FEDORA_OBJECT;
 import static org.modeshape.jcr.api.JcrConstants.JCR_CONTENT;
 import static org.modeshape.jcr.api.JcrConstants.JCR_DATA;
 import static org.modeshape.jcr.api.JcrConstants.NT_FOLDER;
@@ -24,7 +23,6 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 
 import org.apache.poi.util.TempFile;
-import org.fcrepo.utils.FedoraJcrTypes;
 import org.infinispan.schematic.document.Document;
 import org.modeshape.connector.filesystem.FileSystemConnector;
 import org.modeshape.jcr.JcrI18n;
@@ -161,10 +159,7 @@ public class BagItConnector extends FileSystemConnector {
             getLogger().debug(
                     "Determined document: " + id + " to be the projection root.");
             writer.setPrimaryType(NT_FOLDER);
-            writer.addMixinType(FEDORA_OBJECT);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
-                    .create(file.lastModified()));
-            writer.addProperty(JCR_LAST_MODIFIED, factories().getDateFactory()
                     .create(file.lastModified()));
             writer.addProperty(JCR_CREATED_BY, null); // ignored
             for (File child : file.listFiles()) {
@@ -210,17 +205,12 @@ public class BagItConnector extends FileSystemConnector {
             getLogger().debug(
                     "Determined document: " + id + " to be a datastream.");
             writer.setPrimaryType(JcrConstants.NT_FILE);
-            writer.addMixinType(FedoraJcrTypes.FEDORA_OWNED);
-            writer.addMixinType(FedoraJcrTypes.FEDORA_DATASTREAM);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
-                    .create(file.lastModified()));
-            writer.addProperty(JCR_LAST_MODIFIED, factories().getDateFactory()
                     .create(file.lastModified()));
             try {
             	String owner = Files
                         .getOwner(file.toPath()).getName();
                 writer.addProperty(JCR_CREATED_BY, owner);
-                writer.addProperty(FedoraJcrTypes.FEDORA_OWNERID, owner);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -235,22 +225,16 @@ public class BagItConnector extends FileSystemConnector {
             getLogger().debug("searching data dir " + 
                     dataDir.getAbsolutePath());
             writer.setPrimaryType(NT_FOLDER);
-            writer.addMixinType(FEDORA_OBJECT);
-            writer.addMixinType(FedoraJcrTypes.FEDORA_OWNED);
             writer.addMixinType(BAGIT_ARCHIVE_TYPE);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
-                    .create(file.lastModified()));
-            writer.addProperty(JCR_LAST_MODIFIED, factories().getDateFactory()
                     .create(file.lastModified()));
             try {
         	String owner = Files
                     .getOwner(file.toPath()).getName();
             writer.addProperty(JCR_CREATED_BY, owner); // required
-            writer.addProperty(FedoraJcrTypes.FEDORA_OWNERID, owner);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            writer.addProperty(FedoraJcrTypes.DC_IDENTIFIER, id);
             // get datastreams as children
             for (File child : dataDir.listFiles()) {
                 // Only include as a datastream if we can access and read the file. Permissions might prevent us from

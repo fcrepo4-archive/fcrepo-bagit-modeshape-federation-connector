@@ -27,7 +27,7 @@
  */
 <bagit = 'info:fedora/bagit/'>
 
-[bagit:archive] > fedora:object, nt:folder mixin
+[bagit:archive] > nt:folder mixin
 /*
  * Unfortunately, dashes don't appear to be allowed as property names
  */
