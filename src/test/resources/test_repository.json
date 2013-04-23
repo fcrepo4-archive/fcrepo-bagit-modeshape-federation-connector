@@ -11,7 +11,7 @@
       "classname" : "org.fcrepo.federation.bagit.BagItConnector",
       "directoryPath" : "target/test-classes/test-objects",
       "readonly" : false,
-      "cacheTtlSeconds" : 5,
+      "cacheTtlSeconds" : 0,
       "projections" : [ "fedora:/objects => /" ]
      }
     },
