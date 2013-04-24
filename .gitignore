@@ -8,4 +8,6 @@ FedoraRepository/
 indexes/
 ObjectStore/
 */.cache
+*/.*.swp
+.*.swp
 .cache

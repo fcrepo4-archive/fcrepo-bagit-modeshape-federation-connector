@@ -83,14 +83,15 @@ public class BagItConnectorIT {
 	}
 
 	@Test
-	public void tryFilesystemUpdates() throws IOException, RepositoryException {
+	public void tryFilesystemUpdates() throws Exception {
 		JcrSession session = (JcrSession)repo.login();
 
 		// create a random bag and move it into the federated directory
 		File baseDir = new File( "./target/test-classes" );
         File srcDir = new File( baseDir, "tmp-objects" );
 		File dstDir = new File( baseDir, "test-objects" );
-        makeRandomBags( srcDir, 1, 1, 1024L );
+		long fileSize = 1024L;
+        makeRandomBags( srcDir, 1, 1, fileSize );
 		File srcBag = new File( srcDir, "randomBag0" );
 		File dstBag = new File( dstDir, "randomBag0" );
 		srcBag.renameTo( dstBag );
@@ -118,20 +119,7 @@ public class BagItConnectorIT {
         objectProfile.objState = A;
         objectProfile.objModels = obj.getModels();
 	}
-	private static void copyFiles( File srcDir, File dstDir ) throws IOException
-	{
-		dstDir.mkdirs();
-		for ( File srcFile : srcDir.listFiles() )
-		{
-			if ( srcFile.isFile() )
-			{
-				File dstFile = new File( dstDir, srcFile.getName() );
-				logger.debug("copying: " + srcFile.getAbsolutePath() + " -> " + dstFile.getAbsolutePath());
-				Files.copy( srcFile.toPath(), dstFile.toPath() );
-			}
-		}
-	}
-	private static void makeRandomBags( File baseDir, int bagCount,
+	static void makeRandomBags( File baseDir, int bagCount,
 		int fileCount, long fileSize ) throws IOException
 	{
 		BagFactory factory = new BagFactory();
@@ -152,8 +140,9 @@ public class BagItConnectorIT {
 				BufferedWriter buf = new BufferedWriter( new FileWriter(dataFile) );
 				for ( long k = 0L; k < fileSize; k++ )
 				{
-					buf.write( (int)(Math.random() * 10) );
+					buf.write( String.valueOf((int)(Math.random() * 10)) );
 				}
+				buf.close();
 			}
 			PreBag pre = factory.createPreBag( bagDir );
 			Bag bag = pre.makeBagInPlace( BagFactory.LATEST, true, completer );
