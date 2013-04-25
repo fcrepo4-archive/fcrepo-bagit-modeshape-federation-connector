@@ -77,7 +77,7 @@ public abstract class AbstractResourceIT {
 
     protected static HttpPost
             postObjMethod(final String pid, final String query) {
-        if (query.equals("")) {
+        if (query == null || query.equals("")) {
             return new HttpPost(serverAddress + "objects/" + pid);
         } else {
             return new HttpPost(serverAddress + "objects/" + pid + "?" + query);
@@ -93,9 +93,12 @@ public abstract class AbstractResourceIT {
         return post;
     }
 
-    protected static HttpPut putDSMethod(final String pid, final String ds) {
-        return new HttpPut(serverAddress + "objects/" + pid + "/datastreams/" +
-                ds);
+    protected static HttpPut putDSMethod(final String pid, final String ds,
+		String content) throws UnsupportedEncodingException {
+		HttpPut put = new HttpPut(
+			serverAddress + "objects/" + pid + "/datastreams/" + ds);
+        put.setEntity(new StringEntity(content));
+		return put;
     }
 
     protected HttpResponse execute(final HttpUriRequest method)
