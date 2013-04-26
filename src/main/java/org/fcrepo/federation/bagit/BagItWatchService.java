@@ -4,6 +4,7 @@ package org.fcrepo.federation.bagit;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static java.util.regex.Pattern.compile;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -31,17 +32,16 @@ public class BagItWatchService implements WatchService {
 
     private static final Logger logger = getLogger(BagItWatchService.class);
 
-    static final Pattern MANIFEST = Pattern.compile("^manifest-([^\\.]+).txt$");
+    static final Pattern MANIFEST = compile("^manifest-([^\\.]+).txt$");
 
-    static final Pattern TAG_MANIFEST = Pattern
-            .compile("^tagmanifest-([^\\.]+).txt$");
+    static final Pattern TAG_MANIFEST = compile("^tagmanifest-([^\\.]+).txt$");
 
     static GetFilesFromManifest getFilesFromManifest =
             new GetFilesFromManifest();
 
-    WatchService delegate;
+    private WatchService delegate;
 
-    Collection<Path> tagFiles = new ArrayList<Path>();
+    private Collection<Path> tagFiles = new ArrayList<Path>();
 
     Collection<Path> manifests = new ArrayList<Path>();
 
@@ -175,7 +175,7 @@ public class BagItWatchService implements WatchService {
             try (final LineNumberReader lnr =
                     new LineNumberReader(new FileReader(input))) {
                 final ArrayList<File> result = new ArrayList<File>();
-                String line = null;
+                String line;
                 while ((line = lnr.readLine()) != null) {
                     final String fileName = line.split(" ")[0];
                     final File file = new File(input.getParentFile(), fileName);
@@ -183,8 +183,7 @@ public class BagItWatchService implements WatchService {
                 }
                 return result;
             } catch (final IOException e) {
-                e.printStackTrace();
-                return null;
+                throw new RuntimeException(e);
             }
         }
     }

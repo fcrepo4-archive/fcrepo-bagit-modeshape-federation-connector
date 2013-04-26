@@ -1,12 +1,13 @@
 
 package org.fcrepo.federation.bagit;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class ManifestMonitor implements Runnable {
 
@@ -28,7 +29,7 @@ public class ManifestMonitor implements Runnable {
     public void run() {
         while (!this.shutdown) {
             try {
-                final WatchKey key = watchService.poll(1, TimeUnit.SECONDS);
+                final WatchKey key = watchService.poll(1, SECONDS);
                 if (key != null) {
                     final List<WatchEvent<?>> events = key.pollEvents();
                     boolean manifest = false;
