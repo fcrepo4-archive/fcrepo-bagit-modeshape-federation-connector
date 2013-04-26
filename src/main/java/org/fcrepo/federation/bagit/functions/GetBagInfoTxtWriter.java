@@ -1,3 +1,4 @@
+
 package org.fcrepo.federation.bagit.functions;
 
 import java.io.File;
@@ -8,15 +9,18 @@ import org.fcrepo.federation.bagit.BagInfoTxtWriter;
 
 import com.google.common.base.Function;
 
-public class GetBagInfoTxtWriter implements Function<String, gov.loc.repository.bagit.BagInfoTxtWriter> {
+public class GetBagInfoTxtWriter implements
+        Function<String, gov.loc.repository.bagit.BagInfoTxtWriter> {
 
-	@Override
-	public BagInfoTxtWriter apply(String input) {
-		try {
-			return new BagInfoTxtWriter(new FileOutputStream(new File(input)), "UTF-8", 79, 0); // 79 char length, 0 indent
-		} catch (FileNotFoundException e) {
-			throw new IllegalStateException("Could not open BagInfo writer at " + input, e);
-		}
-	}
+    @Override
+    public BagInfoTxtWriter apply(final String input) {
+        try {
+            return new BagInfoTxtWriter(new FileOutputStream(new File(input)),
+                    "UTF-8", 79, 0); // 79 char length, 0 indent
+        } catch (final FileNotFoundException e) {
+            throw new IllegalStateException(
+                    "Could not open BagInfo writer at " + input, e);
+        }
+    }
 
 }

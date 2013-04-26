@@ -1,16 +1,17 @@
-package gov.loc.repository.bagit.impl;
 
-import java.io.InputStream;
+package gov.loc.repository.bagit.impl;
 
 import gov.loc.repository.bagit.BagInfoTxt;
 import gov.loc.repository.bagit.BagInfoTxtReader;
 import gov.loc.repository.bagit.utilities.namevalue.impl.NameValueReaderImpl;
 
-public class BagInfoTxtReaderImpl extends NameValueReaderImpl implements
-		BagInfoTxtReader {
+import java.io.InputStream;
 
-	public BagInfoTxtReaderImpl(String encoding, InputStream in) {
-		super(encoding, in, BagInfoTxt.TYPE);
-	}
-	
+public class BagInfoTxtReaderImpl extends NameValueReaderImpl implements
+        BagInfoTxtReader {
+
+    public BagInfoTxtReaderImpl(final String encoding, final InputStream in) {
+        super(encoding, in, BagInfoTxt.TYPE);
+    }
+
 }

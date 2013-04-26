@@ -1,3 +1,4 @@
+
 package gov.loc.repository.bagit.impl;
 
 import gov.loc.repository.bagit.BagFile;
@@ -8,36 +9,42 @@ import java.io.Closeable;
 import java.io.InputStream;
 
 public class FileSystemBagFile implements BagFile, DeclareCloseable {
-	private String filepath;
-	private FileNode fileNode;
-	
-	public FileSystemBagFile(String filepath, FileNode fileNode) {
-		this.filepath = filepath;
-		this.fileNode = fileNode;
-	}
-	
-	public FileNode getFileNode() {
-		return this.fileNode;
-	}
-		
-	public InputStream newInputStream() {
-		return this.fileNode.newInputStream();
-	}
-	
-	public String getFilepath() {
-		return this.filepath;
-	}
-	
-	public boolean exists() {
-		return this.fileNode.exists();
-	}
-	
-	public long getSize() {
-		return this.fileNode.getSize();
-	}
-	
-	@Override
-	public Closeable declareCloseable() {
-		return this.fileNode.getFileSystem();
-	}
+
+    private final String filepath;
+
+    private final FileNode fileNode;
+
+    public FileSystemBagFile(final String filepath, final FileNode fileNode) {
+        this.filepath = filepath;
+        this.fileNode = fileNode;
+    }
+
+    public FileNode getFileNode() {
+        return this.fileNode;
+    }
+
+    @Override
+    public InputStream newInputStream() {
+        return this.fileNode.newInputStream();
+    }
+
+    @Override
+    public String getFilepath() {
+        return this.filepath;
+    }
+
+    @Override
+    public boolean exists() {
+        return this.fileNode.exists();
+    }
+
+    @Override
+    public long getSize() {
+        return this.fileNode.getSize();
+    }
+
+    @Override
+    public Closeable declareCloseable() {
+        return this.fileNode.getFileSystem();
+    }
 }

@@ -1,4 +1,14 @@
+
 package gov.loc.repository.bagit.impl;
+
+import gov.loc.repository.bagit.Bag;
+import gov.loc.repository.bagit.BagFactory;
+import gov.loc.repository.bagit.BagFactory.Version;
+import gov.loc.repository.bagit.PreBag;
+import gov.loc.repository.bagit.transformer.Completer;
+import gov.loc.repository.bagit.transformer.impl.DefaultCompleter;
+import gov.loc.repository.bagit.utilities.FileHelper;
+import gov.loc.repository.bagit.writer.impl.FileSystemWriter;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,161 +20,180 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import gov.loc.repository.bagit.Bag;
-import gov.loc.repository.bagit.BagFactory;
-import gov.loc.repository.bagit.PreBag;
-import gov.loc.repository.bagit.BagFactory.Version;
-import gov.loc.repository.bagit.transformer.Completer;
-import gov.loc.repository.bagit.transformer.impl.DefaultCompleter;
-import gov.loc.repository.bagit.utilities.FileHelper;
-import gov.loc.repository.bagit.writer.impl.FileSystemWriter;
-
 public class PreBagImpl implements PreBag {
 
-	private static final Logger log = LoggerFactory.getLogger(PreBagImpl.class);
-	
-	BagFactory bagFactory;
-	File dir;
-	List<File> tagFiles = new ArrayList<File>();
-	List<String> ignoreDirs = new ArrayList<String>();
-	
-	public PreBagImpl(BagFactory bagFactory) {
-		this.bagFactory = bagFactory;
-	}
-	
-	@Override
-	public File getFile() {
-		return this.dir;
-	}
+    private static final Logger log = LoggerFactory.getLogger(PreBagImpl.class);
 
-	@Override
-	public void setIgnoreAdditionalDirectories(List<String> dirs) {
-		this.ignoreDirs = dirs;
-	}
-	
-	@Override
-	public Bag makeBagInPlace(Version version, boolean retainBaseDirectory) {
-		return this.makeBagInPlace(version, retainBaseDirectory, false, new DefaultCompleter(this.bagFactory));
+    BagFactory bagFactory;
 
-	}
+    File dir;
 
-	@Override
-	public Bag makeBagInPlace(Version version, boolean retainBaseDirectory, Completer completer) {
-		return this.makeBagInPlace(version, retainBaseDirectory, false, completer);
-	}
-	
-	@Override
-	public Bag makeBagInPlace(Version version, boolean retainBaseDirectory,
-			boolean keepEmptyDirectories) {
-		return this.makeBagInPlace(version, retainBaseDirectory, keepEmptyDirectories, new DefaultCompleter(this.bagFactory));
-	}
-	
-	@Override
-	public Bag makeBagInPlace(Version version, boolean retainBaseDirectory, boolean keepEmptyDirectories, Completer completer) {
-		log.info(MessageFormat.format("Making a bag in place at {0}", this.dir));
-		File dataDir = new File(this.dir, this.bagFactory.getBagConstants(version).getDataDirectory());
-		log.trace("Data directory is " + dataDir);
-		try {
-			//If there is no data direct
-			if (! dataDir.exists()) {
-				log.trace("Data directory does not exist");
-				//If retainBaseDirectory
-				File moveToDir = dataDir;
-				if (retainBaseDirectory) {
-					//Create new base directory in data directory
-					moveToDir = new File(dataDir, this.dir.getName());
-					//Move contents of base directory to new base directory
-				}
-				log.trace("Move to dir is " + moveToDir);
-				for(File file : FileHelper.normalizeForm(this.dir.listFiles())) {
-					if (! (file.equals(dataDir) || (file.isDirectory() && this.ignoreDirs.contains(file.getName())))) {
-						FileUtils.moveToDirectory(file, moveToDir, true);
-					}
-				}
-				
-			} else {
-				if (! dataDir.isDirectory()) throw new RuntimeException(MessageFormat.format("{0} is not a directory", dataDir));
-				//Look for additional, non-ignored files
-				for(File file : FileHelper.normalizeForm(this.dir.listFiles())) {
-					//If there is a directory that isn't the data dir and isn't ignored and pre v0.97 then exception
-					if (file.isDirectory() 
-							&& (! file.equals(dataDir)) 
-							&& ! this.ignoreDirs.contains(file.getName())
-							&& (Version.V0_93 == version || Version.V0_94 == version || Version.V0_95 == version || Version.V0_96 == version)) {
-						throw new RuntimeException("Found additional directories in addition to existing data directory.");
-					}
-				}
-				
-			}
-		} catch (IOException ex) {
-			throw new RuntimeException(ex);
-		}
-		
-		//Handle empty directories
-		if (keepEmptyDirectories) {
-			this.addKeep(dataDir);
-		}
-		
-		//Copy the tags
-		for(File tagFile : this.tagFiles) {
-			log.trace(MessageFormat.format("Copying tag file {0} to {1}", tagFile, this.dir));
-			try {
-				FileUtils.copyFileToDirectory(tagFile, this.dir);
-			} catch (IOException ex) {
-				throw new RuntimeException(ex);
-			}
-		}
-						
-		//Create a bag
-		Bag bag = this.bagFactory.createBagByPayloadFiles(this.dir, version, this.ignoreDirs);
-		//Complete the bag
-		bag = bag.makeComplete(completer);
-		//Write the bag
-		return bag.write(new FileSystemWriter(this.bagFactory), this.dir);
-	}
+    List<File> tagFiles = new ArrayList<File>();
 
-	@Override
-	public void setFile(File dir) {
-		dir = FileHelper.normalizeForm(dir);
-		if (! dir.exists()) {
-			throw new RuntimeException(MessageFormat.format("{0} does not exist", dir));
-		}
-		if (! dir.isDirectory()) {
-			throw new RuntimeException(MessageFormat.format("{0} is not a directory", dir));
-		}
-		this.dir = dir;
-	}
+    List<String> ignoreDirs = new ArrayList<String>();
 
-	@Override
-	public List<File> getTagFiles() {
-		return this.tagFiles;
-	}
+    public PreBagImpl(final BagFactory bagFactory) {
+        this.bagFactory = bagFactory;
+    }
 
-	@Override
-	public void setTagFiles(List<File> tagFiles) {
-		this.tagFiles = tagFiles;		
-	}
-	
-	private void addKeep(File file) {
-		file = FileHelper.normalizeForm(file);
-		if (file.isDirectory() && ! this.ignoreDirs.contains(file.getName())) {
-			//If file is empty, add .keep
-			File[] children = file.listFiles();
-			if (children.length == 0) {
-				log.info("Adding .keep file to " + file.toString());
-				try {
-					FileUtils.touch(new File(file, ".keep"));
-				} catch (IOException e) {
-					throw new RuntimeException("Error adding .keep file to " + file.toString(), e);
-				}
-			} else {
-				//Otherwise, recurse over children
-				for(File childFile : children) {
-					addKeep(childFile);
-				}
-			}
-		}
-		//Otherwise do nothing
-	}
+    @Override
+    public File getFile() {
+        return this.dir;
+    }
+
+    @Override
+    public void setIgnoreAdditionalDirectories(final List<String> dirs) {
+        this.ignoreDirs = dirs;
+    }
+
+    @Override
+    public Bag makeBagInPlace(final Version version,
+            final boolean retainBaseDirectory) {
+        return this.makeBagInPlace(version, retainBaseDirectory, false,
+                new DefaultCompleter(this.bagFactory));
+
+    }
+
+    @Override
+    public Bag makeBagInPlace(final Version version,
+            final boolean retainBaseDirectory, final Completer completer) {
+        return this.makeBagInPlace(version, retainBaseDirectory, false,
+                completer);
+    }
+
+    @Override
+    public Bag makeBagInPlace(final Version version,
+            final boolean retainBaseDirectory,
+            final boolean keepEmptyDirectories) {
+        return this.makeBagInPlace(version, retainBaseDirectory,
+                keepEmptyDirectories, new DefaultCompleter(this.bagFactory));
+    }
+
+    @Override
+    public Bag makeBagInPlace(final Version version,
+            final boolean retainBaseDirectory,
+            final boolean keepEmptyDirectories, final Completer completer) {
+        log.info(MessageFormat.format("Making a bag in place at {0}", this.dir));
+        final File dataDir =
+                new File(this.dir, this.bagFactory.getBagConstants(version)
+                        .getDataDirectory());
+        log.trace("Data directory is " + dataDir);
+        try {
+            //If there is no data direct
+            if (!dataDir.exists()) {
+                log.trace("Data directory does not exist");
+                //If retainBaseDirectory
+                File moveToDir = dataDir;
+                if (retainBaseDirectory) {
+                    //Create new base directory in data directory
+                    moveToDir = new File(dataDir, this.dir.getName());
+                    //Move contents of base directory to new base directory
+                }
+                log.trace("Move to dir is " + moveToDir);
+                for (final File file : FileHelper.normalizeForm(this.dir
+                        .listFiles())) {
+                    if (!(file.equals(dataDir) || (file.isDirectory() && this.ignoreDirs
+                            .contains(file.getName())))) {
+                        FileUtils.moveToDirectory(file, moveToDir, true);
+                    }
+                }
+
+            } else {
+                if (!dataDir.isDirectory()) {
+                    throw new RuntimeException(MessageFormat.format(
+                            "{0} is not a directory", dataDir));
+                }
+                //Look for additional, non-ignored files
+                for (final File file : FileHelper.normalizeForm(this.dir
+                        .listFiles())) {
+                    //If there is a directory that isn't the data dir and isn't ignored and pre v0.97 then exception
+                    if (file.isDirectory() &&
+                            (!file.equals(dataDir)) &&
+                            !this.ignoreDirs.contains(file.getName()) &&
+                            (Version.V0_93 == version ||
+                                    Version.V0_94 == version ||
+                                    Version.V0_95 == version || Version.V0_96 == version)) {
+                        throw new RuntimeException(
+                                "Found additional directories in addition to existing data directory.");
+                    }
+                }
+
+            }
+        } catch (final IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        //Handle empty directories
+        if (keepEmptyDirectories) {
+            this.addKeep(dataDir);
+        }
+
+        //Copy the tags
+        for (final File tagFile : this.tagFiles) {
+            log.trace(MessageFormat.format("Copying tag file {0} to {1}",
+                    tagFile, this.dir));
+            try {
+                FileUtils.copyFileToDirectory(tagFile, this.dir);
+            } catch (final IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        //Create a bag
+        Bag bag =
+                this.bagFactory.createBagByPayloadFiles(this.dir, version,
+                        this.ignoreDirs);
+        //Complete the bag
+        bag = bag.makeComplete(completer);
+        //Write the bag
+        return bag.write(new FileSystemWriter(this.bagFactory), this.dir);
+    }
+
+    @Override
+    public void setFile(File dir) {
+        dir = FileHelper.normalizeForm(dir);
+        if (!dir.exists()) {
+            throw new RuntimeException(MessageFormat.format(
+                    "{0} does not exist", dir));
+        }
+        if (!dir.isDirectory()) {
+            throw new RuntimeException(MessageFormat.format(
+                    "{0} is not a directory", dir));
+        }
+        this.dir = dir;
+    }
+
+    @Override
+    public List<File> getTagFiles() {
+        return this.tagFiles;
+    }
+
+    @Override
+    public void setTagFiles(final List<File> tagFiles) {
+        this.tagFiles = tagFiles;
+    }
+
+    private void addKeep(File file) {
+        file = FileHelper.normalizeForm(file);
+        if (file.isDirectory() && !this.ignoreDirs.contains(file.getName())) {
+            //If file is empty, add .keep
+            final File[] children = file.listFiles();
+            if (children.length == 0) {
+                log.info("Adding .keep file to " + file.toString());
+                try {
+                    FileUtils.touch(new File(file, ".keep"));
+                } catch (final IOException e) {
+                    throw new RuntimeException("Error adding .keep file to " +
+                            file.toString(), e);
+                }
+            } else {
+                //Otherwise, recurse over children
+                for (final File childFile : children) {
+                    addKeep(childFile);
+                }
+            }
+        }
+        //Otherwise do nothing
+    }
 
 }

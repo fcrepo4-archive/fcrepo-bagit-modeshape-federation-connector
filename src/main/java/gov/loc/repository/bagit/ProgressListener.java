@@ -1,3 +1,4 @@
+
 package gov.loc.repository.bagit;
 
 /**
@@ -19,15 +20,16 @@ package gov.loc.repository.bagit;
  * @see ProgressListenable
  * @see gov.loc.repository.bagit.utilities.LongRunningOperationBase
  */
-public interface ProgressListener
-{
-	/**
-	 * Receives a progress report.
-	 * 
-	 * @param activity Describes the current activity of the operation.  Will never be null.
-	 * @param item The item currently being processed.  May be null.
-	 * @param count The index of the current item being processed.  May be null.
-	 * @param total The total number of items to be processed.  May be null.
-	 */
-	void reportProgress(String activity, Object item, Long count, Long total);
+public interface ProgressListener {
+
+    /**
+     * Receives a progress report.
+     * 
+     * @param activity Describes the current activity of the operation.  Will never be null.
+     * @param item The item currently being processed.  May be null.
+     * @param count The index of the current item being processed.  May be null.
+     * @param total The total number of items to be processed.  May be null.
+     */
+    void reportProgress(final String activity, final Object item,
+            final Long count, final Long total);
 }

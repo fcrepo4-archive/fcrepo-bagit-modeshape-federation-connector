@@ -15,7 +15,7 @@ public class BagItWatchServiceTest {
 
     @Test
     public void testIsManifest() throws IOException {
-        File input = mock(File.class);
+        final File input = mock(File.class);
         when(input.isFile()).thenReturn(true);
         when(input.canRead()).thenReturn(true);
 
@@ -39,7 +39,7 @@ public class BagItWatchServiceTest {
 
     @Test
     public void testIsTagManifest() throws IOException {
-        File input = mock(File.class);
+        final File input = mock(File.class);
         when(input.isFile()).thenReturn(true);
         when(input.canRead()).thenReturn(true);
 

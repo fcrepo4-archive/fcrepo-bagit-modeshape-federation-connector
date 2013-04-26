@@ -1,9 +1,11 @@
+
 package org.fcrepo.federation.bagit;
+
+import gov.loc.repository.bagit.impl.BagInfoTxtWriterImpl;
 
 import java.io.Closeable;
 import java.io.OutputStream;
 
-import gov.loc.repository.bagit.impl.BagInfoTxtWriterImpl;
 /**
  * Just a proxy to implement Closeable
  * @author ba2213
@@ -11,12 +13,13 @@ import gov.loc.repository.bagit.impl.BagInfoTxtWriterImpl;
  */
 public class BagInfoTxtWriter extends BagInfoTxtWriterImpl implements Closeable {
 
-	public BagInfoTxtWriter(OutputStream out, String encoding) {
-		super(out, encoding);
-	}
+    public BagInfoTxtWriter(final OutputStream out, final String encoding) {
+        super(out, encoding);
+    }
 
-	public BagInfoTxtWriter(OutputStream out, String encoding, int lineLength, int indent) {
-		super(out, encoding, lineLength, indent);
-	}
-	
+    public BagInfoTxtWriter(final OutputStream out, final String encoding,
+            final int lineLength, final int indent) {
+        super(out, encoding, lineLength, indent);
+    }
+
 }

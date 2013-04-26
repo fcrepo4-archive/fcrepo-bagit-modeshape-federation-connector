@@ -1,3 +1,4 @@
+
 package org.fcrepo.federation.bagit;
 
 import org.modeshape.jcr.cache.document.DocumentTranslator;
@@ -11,22 +12,22 @@ import org.modeshape.jcr.federation.spi.DocumentWriter;
  *
  */
 public class DocumentWriterFactory {
-	
-	private DocumentTranslator m_translator;
 
-	public DocumentWriterFactory() {
-		
-	}
-	
-	public DocumentWriterFactory(DocumentTranslator translator) {
-		setTranslator(translator);
-	}
-	
-	public void setTranslator(DocumentTranslator translator) {
-		m_translator = translator;
-	}
-	
-	public DocumentWriter getDocumentWriter(String id) {
-		return new FederatedDocumentWriter(m_translator).setId(id);
-	}
+    private DocumentTranslator m_translator;
+
+    public DocumentWriterFactory() {
+
+    }
+
+    public DocumentWriterFactory(final DocumentTranslator translator) {
+        setTranslator(translator);
+    }
+
+    public void setTranslator(final DocumentTranslator translator) {
+        m_translator = translator;
+    }
+
+    public DocumentWriter getDocumentWriter(final String id) {
+        return new FederatedDocumentWriter(m_translator).setId(id);
+    }
 }

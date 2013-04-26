@@ -1,3 +1,4 @@
+
 package gov.loc.repository.bagit;
 
 /**
@@ -19,21 +20,21 @@ package gov.loc.repository.bagit;
  * @see ProgressListener
  * @see gov.loc.repository.bagit.utilities.LongRunningOperationBase
  */
-public interface ProgressListenable
-{
-	/**
-	 * Adds a progress listener.
-	 * 
-	 * @param progressListener The listener to add.  Must not be null.
-	 */
-	void addProgressListener(ProgressListener progressListener);
-	
-	/**
-	 * Removes a progress listener.  If the listener was not previously
-	 * registered with {@link #addProgressListener(ProgressListener)},
-	 * or has already been removed, then nothing happens.
-	 * 
-	 * @param progressListener The listener to remove.  Must not be null.
-	 */
-	void removeProgressListener(ProgressListener progressListener);
+public interface ProgressListenable {
+
+    /**
+     * Adds a progress listener.
+     * 
+     * @param progressListener The listener to add.  Must not be null.
+     */
+    void addProgressListener(final ProgressListener progressListener);
+
+    /**
+     * Removes a progress listener.  If the listener was not previously
+     * registered with {@link #addProgressListener(ProgressListener)},
+     * or has already been removed, then nothing happens.
+     * 
+     * @param progressListener The listener to remove.  Must not be null.
+     */
+    void removeProgressListener(final ProgressListener progressListener);
 }

@@ -1,7 +1,9 @@
 
 package org.fcrepo.federation.bagit;
 
-import static java.nio.file.StandardWatchEventKinds.*;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -52,20 +54,22 @@ public class BagItWatchService implements WatchService {
      * Constructor to facilitate testing
      * @param delegate
      */
-    BagItWatchService(WatchService delegate) {
+    BagItWatchService(final WatchService delegate) {
         this.delegate = delegate;
     }
 
-    public BagItWatchService(File bagItDir)
+    public BagItWatchService(final File bagItDir)
             throws IOException {
         this();
-        Paths.get(bagItDir.toURI()).register(delegate, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
-        for (File file : bagItDir.listFiles()) {
+        Paths.get(bagItDir.toURI()).register(delegate, ENTRY_CREATE,
+                ENTRY_MODIFY, ENTRY_DELETE);
+        for (final File file : bagItDir.listFiles()) {
             if (isManifest(file)) {
                 monitorManifest(file);
             } else if (isTagManifest(file)) {
-                for (File listedFile : getFilesFromManifest.apply(file))
+                for (final File listedFile : getFilesFromManifest.apply(file)) {
                     monitorTagFile(listedFile);
+                }
             }
         }
     }
@@ -81,7 +85,7 @@ public class BagItWatchService implements WatchService {
     }
 
     @Override
-    public WatchKey poll(long timeout, TimeUnit unit)
+    public WatchKey poll(final long timeout, final TimeUnit unit)
             throws InterruptedException {
         return delegate.poll(timeout, unit);
     }
@@ -91,26 +95,30 @@ public class BagItWatchService implements WatchService {
         return delegate.take();
     }
 
-    public void monitorTagFile(File input) throws IOException {
-        Path path = Paths.get(input.toURI());
-        if (!tagFiles.contains(path)) tagFiles.add(path);
-        //path.register(delegate, ENTRY_MODIFY);
+    public void monitorTagFile(final File input) throws IOException {
+        final Path path = Paths.get(input.toURI());
+        if (!tagFiles.contains(path)) {
+            tagFiles.add(path);
+            //path.register(delegate, ENTRY_MODIFY);
+        }
     }
 
-    public void monitorManifest(File input) throws IOException {
-        Path path = Paths.get(input.toURI());
-        if (!manifests.contains(path)) manifests.add(path);
-        //path.register(delegate, ENTRY_MODIFY);
+    public void monitorManifest(final File input) throws IOException {
+        final Path path = Paths.get(input.toURI());
+        if (!manifests.contains(path)) {
+            manifests.add(path);
+            //path.register(delegate, ENTRY_MODIFY);
+        }
     }
 
-    boolean isManifest(String fileName) {
-        Matcher m = MANIFEST.matcher(fileName);
+    boolean isManifest(final String fileName) {
+        final Matcher m = MANIFEST.matcher(fileName);
         if (m.find()) {
-            String csa = m.group(1);
+            final String csa = m.group(1);
             try {
                 MessageDigest.getInstance(csa);
                 return true;
-            } catch (NoSuchAlgorithmException e) {
+            } catch (final NoSuchAlgorithmException e) {
                 logger.warn(
                         "Ignoring potential manifest file {} because {} is not a supported checksum algorithm.",
                         fileName, csa);
@@ -119,25 +127,26 @@ public class BagItWatchService implements WatchService {
         return false;
     }
 
-    boolean isManifest(File file) {
+    boolean isManifest(final File file) {
         if (file.isFile() && file.canRead() && !file.isHidden()) {
             return (isManifest(file.getName()));
-        } else
+        } else {
             return false;
+        }
     }
 
-    boolean isManifest(Path path) {
+    boolean isManifest(final Path path) {
         return isManifest(path.toFile());
     }
 
-    boolean isTagManifest(String fileName) {
-        Matcher m = TAG_MANIFEST.matcher(fileName);
+    boolean isTagManifest(final String fileName) {
+        final Matcher m = TAG_MANIFEST.matcher(fileName);
         if (m.find()) {
-            String csa = m.group(1);
+            final String csa = m.group(1);
             try {
                 MessageDigest.getInstance(csa);
                 return true;
-            } catch (NoSuchAlgorithmException e) {
+            } catch (final NoSuchAlgorithmException e) {
                 logger.warn(
                         "Ignoring potential tag-manifest file {} because {} is not a supported checksum algorithm.",
                         fileName, csa);
@@ -146,14 +155,15 @@ public class BagItWatchService implements WatchService {
         return false;
     }
 
-    boolean isTagManifest(File file) {
+    boolean isTagManifest(final File file) {
         if (file.isFile() && file.canRead() && !file.isHidden()) {
             return isTagManifest(file.getName());
-        } else
+        } else {
             return false;
+        }
     }
 
-    boolean isTagManifest(Path path) {
+    boolean isTagManifest(final Path path) {
         return isManifest(path.toFile());
     }
 
@@ -161,18 +171,18 @@ public class BagItWatchService implements WatchService {
             Function<File, Collection<File>> {
 
         @Override
-        public Collection<File> apply(File input) {
+        public Collection<File> apply(final File input) {
             try (final LineNumberReader lnr =
                     new LineNumberReader(new FileReader(input))) {
-                ArrayList<File> result = new ArrayList<File>();
+                final ArrayList<File> result = new ArrayList<File>();
                 String line = null;
                 while ((line = lnr.readLine()) != null) {
-                    String fileName = line.split(" ")[0];
-                    File file = new File(input.getParentFile(), fileName);
+                    final String fileName = line.split(" ")[0];
+                    final File file = new File(input.getParentFile(), fileName);
                     result.add(file);
                 }
                 return result;
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 e.printStackTrace();
                 return null;
             }

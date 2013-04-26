@@ -1,3 +1,4 @@
+
 package gov.loc.repository.bagit.impl;
 
 import gov.loc.repository.bagit.BagFile;
@@ -8,45 +9,49 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 
 public class FileBagFile implements BagFile {
-	private File file;
-	private String filepath;
-	
-	public FileBagFile(String name, File file) {
-		this.filepath = name;
-		this.file = file;
-		
-	}
-	
-	public InputStream newInputStream() {
-		
-		try {
-			return new BufferedInputStream(new FileInputStream(this.file));
-		}
-		catch(Exception ex)
-		{
-			throw new RuntimeException(ex);
-		}
-	}
-	
-	public String getFilepath() {
-		return this.filepath;
-	}
-	
-	public boolean exists() {
-		if (this.file != null && this.file.exists()) {
-			return true;			
-		}
-		return false;
-	}
 
-	public long getSize() {
-		if (this.exists()) {
-			return this.file.length();
-		}
-		return 0L;
-	}
-	
-	public File getFile() {
-		return file;
-	}
+    private final File file;
+
+    private final String filepath;
+
+    public FileBagFile(final String name, final File file) {
+        this.filepath = name;
+        this.file = file;
+
+    }
+
+    @Override
+    public InputStream newInputStream() {
+
+        try {
+            return new BufferedInputStream(new FileInputStream(this.file));
+        } catch (final Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public String getFilepath() {
+        return this.filepath;
+    }
+
+    @Override
+    public boolean exists() {
+        if (this.file != null && this.file.exists()) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public long getSize() {
+        if (this.exists()) {
+            return this.file.length();
+        }
+        return 0L;
+    }
+
+    public File getFile() {
+        return file;
+    }
 }

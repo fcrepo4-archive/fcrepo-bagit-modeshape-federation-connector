@@ -1,55 +1,56 @@
+
 package gov.loc.repository.bagit.impl;
+
+import gov.loc.repository.bagit.BagFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import gov.loc.repository.bagit.BagFile;
-
 public class StringBagFile implements BagFile {
 
-	private String filepath;
-	private byte[] buf = new byte[0];
-	private static final String ENC = "utf-8";
-	
-	public StringBagFile(String name, byte[] data)
-	{
-		this.filepath = name;
-		this.buf = data;
-	}
-	
-	public StringBagFile(String name, String str) {		
-		this.filepath = name;
-		if (str != null) {
-			try {
-				this.buf = str.getBytes(ENC);
-			}
-			catch(Exception ex) {
-				throw new RuntimeException(ex);
-			}
-		}
-	}
-	
-	@Override
-	public boolean exists() {
-		if (buf.length == 0) {
-			return false;
-		}
-		return true;
-	}
+    private final String filepath;
 
-	@Override
-	public String getFilepath() {
-		return this.filepath;
-	}
+    private byte[] buf = new byte[0];
 
-	@Override
-	public long getSize() {
-		return buf.length;
-	}
+    private static final String ENC = "utf-8";
 
-	@Override
-	public InputStream newInputStream() {
-		return new ByteArrayInputStream(this.buf);
-	}
+    public StringBagFile(final String name, final byte[] data) {
+        this.filepath = name;
+        this.buf = data;
+    }
+
+    public StringBagFile(final String name, final String str) {
+        this.filepath = name;
+        if (str != null) {
+            try {
+                this.buf = str.getBytes(ENC);
+            } catch (final Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+    @Override
+    public boolean exists() {
+        if (buf.length == 0) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String getFilepath() {
+        return this.filepath;
+    }
+
+    @Override
+    public long getSize() {
+        return buf.length;
+    }
+
+    @Override
+    public InputStream newInputStream() {
+        return new ByteArrayInputStream(this.buf);
+    }
 
 }
