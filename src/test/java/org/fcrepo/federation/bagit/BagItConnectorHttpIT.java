@@ -4,6 +4,7 @@ package org.fcrepo.federation.bagit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,12 +15,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class BagItConnectorHttpIT extends AbstractResourceIT {
 
-    private static Logger logger = LoggerFactory
-            .getLogger(BagItConnectorHttpIT.class);
+    private static Logger logger = getLogger(BagItConnectorHttpIT.class);
 
     @Test
     public void tryOneObject() throws ClientProtocolException, IOException {
@@ -74,7 +73,7 @@ public class BagItConnectorHttpIT extends AbstractResourceIT {
             // check datastream list
             final HttpGet dsListGet =
                     new HttpGet(serverAddress + "objects/" + pid +
-                            "/datastreams/");
+                            "/fcr:datastreams/");
             final String dsList =
                     EntityUtils.toString(client.execute(dsListGet).getEntity());
             logger.debug("dsList: " + dsList);
@@ -84,23 +83,24 @@ public class BagItConnectorHttpIT extends AbstractResourceIT {
             // check datastream profile
             final HttpGet dsProfileGet =
                     new HttpGet(serverAddress + "objects/" + pid +
-                            "/datastreams/" + existingDS);
+                            "/fcr:datastreams/" + existingDS);
             final String dsProfile =
                     EntityUtils.toString(client.execute(dsProfileGet)
                             .getEntity());
             logger.debug("dsProfile: " + dsProfile);
-            assertTrue("Existing datastream profile empty", dsProfile != null);
+            assertTrue("Existing datastream profile empty!", dsProfile != null);
 
             // check datastream content
             final HttpGet dsContentGet =
-                    new HttpGet(serverAddress + "objects/" + pid +
-                            "/datastreams/" + existingDS + "/content");
+                    new HttpGet(serverAddress + "objects/" + pid + "/" +
+                            existingDS + "/fcr:content");
             final String dsContent =
                     EntityUtils.toString(client.execute(dsContentGet)
                             .getEntity());
             logger.debug("dsContent: '" + dsContent + "'");
-            assertTrue("Existing datastream content empty", dsContent != null &&
-                    dsContent.length() == existingDSSize);
+            assertTrue("Existing datastream content empty!", dsContent != null);
+            assertTrue("Existing datastream content of wrong size!", dsContent
+                    .length() == existingDSSize);
 
             /*
              * TODO: implement write functionality in BagItConnector
