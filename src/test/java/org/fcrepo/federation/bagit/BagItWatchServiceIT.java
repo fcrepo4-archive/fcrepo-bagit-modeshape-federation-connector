@@ -1,7 +1,6 @@
 
 package org.fcrepo.federation.bagit;
 
-import static org.fcrepo.jaxb.responses.access.ObjectProfile.ObjectStates.A;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -16,6 +15,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 
 import javax.inject.Inject;
 import javax.jcr.Node;
@@ -23,59 +23,21 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-
-import org.fcrepo.FedoraObject;
-import org.fcrepo.jaxb.responses.access.ObjectProfile;
-import org.fcrepo.services.PathService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.modeshape.jcr.JcrSession;
-import org.modeshape.jcr.api.Session;
 import org.slf4j.Logger;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("/spring-test/master.xml")
-public class BagItConnectorIT {
+public class BagItWatchServiceIT {
 
-    private static Logger logger = getLogger(BagItConnectorIT.class);
+    private static Logger logger = getLogger(BagItWatchServiceIT.class);
 
     @Inject
     Repository repo;
-
-    @Test
-    public void tryProgrammaticAccess() throws RepositoryException {
-        final Session session = (Session) repo.login();
-        final Node node = session.getNode("/objects/BagItFed1");
-        logger.info("Got node at " + node.getPath());
-        final PropertyIterator properties = node.getProperties("bagit:*");
-        assertTrue(properties.hasNext());
-        // Bag-Count: 1 of 1
-        final Property property = node.getProperty("bagit:Bag.Count");
-        assertNotNull(property);
-        assertEquals("1 of 1", property.getString());
-        NodeIterator nodes = node.getNodes();
-        assertTrue("/objects/testDS had no child nodes!", nodes.hasNext());
-        final Node child = nodes.nextNode();
-        nodes = child.getNodes();
-        assertEquals("jcr:content", nodes.nextNode().getName());
-        final FedoraObject obj =
-                new FedoraObject(session, PathService
-                        .getObjectJcrNodePath("BagItFed1"));
-        final ObjectProfile objectProfile = new ObjectProfile();
-        objectProfile.pid = obj.getName();
-        objectProfile.objLabel = obj.getLabel();
-        objectProfile.objOwnerId = obj.getOwnerId();
-        objectProfile.objCreateDate = obj.getCreated();
-        objectProfile.objLastModDate = obj.getLastModified();
-        objectProfile.objSize = obj.getSize();
-        //        objectProfile.objItemIndexViewURL =
-        //                uriInfo.getAbsolutePathBuilder().path("datastreams").build();
-        objectProfile.objState = A;
-        objectProfile.objModels = obj.getModels();
-    }
 
     @Test
     public void tryFilesystemUpdates() throws Exception {
@@ -103,18 +65,13 @@ public class BagItConnectorIT {
         final Node child = nodes.nextNode();
         nodes = child.getNodes();
         assertEquals("jcr:content", nodes.nextNode().getName());
-        final FedoraObject obj =
-                new FedoraObject(session, PathService
-                        .getObjectJcrNodePath("BagItFed1"));
-        final ObjectProfile objectProfile = new ObjectProfile();
-        objectProfile.pid = obj.getName();
-        objectProfile.objLabel = obj.getLabel();
-        objectProfile.objOwnerId = obj.getOwnerId();
-        objectProfile.objCreateDate = obj.getCreated();
-        objectProfile.objLastModDate = obj.getLastModified();
-        objectProfile.objSize = obj.getSize();
-        objectProfile.objState = A;
-        objectProfile.objModels = obj.getModels();
+
+        logger.debug("Now try tinkering with a manifest");
+        final File bagInfo = new File(dstBag, "bag-info.txt");
+        try (final Writer writer = new FileWriter(bagInfo, true)) {
+            writer.write("FAKETAG: FAKETAGVALUE");
+        }
+
     }
 
     static void makeRandomBags(final File baseDir, final int bagCount,

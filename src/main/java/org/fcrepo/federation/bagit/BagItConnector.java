@@ -31,6 +31,7 @@ import org.modeshape.jcr.api.nodetype.NodeTypeManager;
 import org.modeshape.jcr.cache.DocumentStoreException;
 import org.modeshape.jcr.federation.spi.DocumentChanges;
 import org.modeshape.jcr.federation.spi.DocumentWriter;
+import org.modeshape.jcr.federation.spi.change.ConnectorChangedSet;
 import org.modeshape.jcr.value.BinaryValue;
 import org.modeshape.jcr.value.PropertyFactory;
 import org.modeshape.jcr.value.ValueFactories;
@@ -39,9 +40,11 @@ public class BagItConnector extends FileSystemConnector {
 
     private static final String BAGIT_ARCHIVE_TYPE = "bagit:archive";
 
-    private static final char JCR_PATH_DELIMITER_CHAR = '/'; // NOT THE File.pathSeparator;
+    // NOT THE File.pathSeparator;
+    private static final char JCR_PATH_DELIMITER_CHAR = '/';
 
-    private static final String JCR_PATH_DELIMITER = "/"; // NOT THE File.pathSeparator;
+    // NOT THE File.pathSeparator;
+    private static final String JCR_PATH_DELIMITER = "/";
 
     private static final String JCR_LAST_MODIFIED = "jcr:lastModified";
 
@@ -294,14 +297,6 @@ public class BagItConnector extends FileSystemConnector {
         return this.m_directory;
     }
 
-    void changeManifest(final File file) {
-        // do some manifest stuff
-    }
-
-    void changeTagFile(final File file) {
-        // do some tagFile stuff
-    }
-
     @Override
     protected File fileFor(String id) {
         assert id.startsWith(JCR_PATH_DELIMITER);
@@ -410,5 +405,10 @@ public class BagItConnector extends FileSystemConnector {
                         bagInfoFile), getPropertyFactory(),
                         vf.getNameFactory(), new BagConstantsImpl());
         return result;
+    }
+
+    @Override
+    protected ConnectorChangedSet newConnectorChangedSet() {
+        return super.newConnectorChangedSet();
     }
 }

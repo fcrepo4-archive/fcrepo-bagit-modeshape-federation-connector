@@ -96,18 +96,18 @@ public class BagItWatchService implements WatchService {
     }
 
     public void monitorTagFile(final File input) throws IOException {
-        final Path path = Paths.get(input.toURI());
+        final Path path = input.toPath();
         if (!tagFiles.contains(path)) {
             tagFiles.add(path);
-            //path.register(delegate, ENTRY_MODIFY);
+            path.register(delegate, ENTRY_MODIFY);
         }
     }
 
     public void monitorManifest(final File input) throws IOException {
-        final Path path = Paths.get(input.toURI());
+        final Path path = input.toPath();
         if (!manifests.contains(path)) {
             manifests.add(path);
-            //path.register(delegate, ENTRY_MODIFY);
+            path.register(delegate, ENTRY_MODIFY);
         }
     }
 
