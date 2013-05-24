@@ -2,8 +2,8 @@
     "name" : "repo",
     "jndiName" : "",
     "workspaces" : {
-        "predefined" : ["fedora"],
-        "default" : "fedora",
+        "predefined" : [],
+        "default" : "default",
         "allowCreation" : true
     },
   "externalSources" : {
@@ -12,7 +12,7 @@
       "directoryPath" : "target/test-classes/test-objects",
       "readonly" : false,
       "cacheTtlSeconds" : 0,
-      "projections" : [ "fedora:/objects => /" ]
+      "projections" : [ "default:/objects => /" ]
      }
     },
     "security" : {
