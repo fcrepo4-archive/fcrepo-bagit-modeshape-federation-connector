@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import javax.inject.Inject;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -24,23 +23,26 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
-import org.fcrepo.FedoraObject;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.modeshape.jcr.JcrRepositoryFactory;
 import org.modeshape.jcr.JcrSession;
+import org.modeshape.jcr.api.JcrTools;
 import org.modeshape.jcr.api.Session;
 import org.slf4j.Logger;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("/spring-test/master.xml")
 public class BagItConnectorIT {
 
     private static Logger logger = getLogger(BagItConnectorIT.class);
 
-    @Inject
     Repository repo;
+    JcrTools jcrTools;
+
+    @Before
+    public void setUp() throws RepositoryException {
+        repo = new JcrRepositoryFactory().getRepository("file:/src/test/resources/test_repository.json", "repo");
+        jcrTools = new JcrTools();
+    }
 
     @Test
     public void tryProgrammaticAccess() throws RepositoryException {
@@ -58,13 +60,9 @@ public class BagItConnectorIT {
         final Node child = nodes.nextNode();
         nodes = child.getNodes();
         assertEquals("jcr:content", nodes.nextNode().getName());
-        final FedoraObject obj =
-                new FedoraObject(session, "/objects/BagItFed1");
-        obj.getName();
-        obj.getLastModifiedDate();
-        obj.getCreatedDate();
-        obj.getSize();
-        obj.getModels();
+        final Node obj = session.getNode("/objects/BagItFed1");
+        obj.getIdentifier();
+        obj.getMixinNodeTypes();
     }
 
     @Test
@@ -93,13 +91,9 @@ public class BagItConnectorIT {
         final Node child = nodes.nextNode();
         nodes = child.getNodes();
         assertEquals("jcr:content", nodes.nextNode().getName());
-        final FedoraObject obj =
-                new FedoraObject(session, "/objects/randomBag0");
-        obj.getName();
-        obj.getLastModifiedDate();
-        obj.getCreatedDate();
-        obj.getSize();
-        obj.getModels();
+        final Node obj = session.getNode("/objects/BagItFed1");
+        obj.getIdentifier();
+        obj.getMixinNodeTypes();
     }
 
     static void makeRandomBags(final File baseDir, final int bagCount,

@@ -17,27 +17,30 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 
-import javax.inject.Inject;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.modeshape.jcr.JcrRepositoryFactory;
 import org.modeshape.jcr.JcrSession;
 import org.slf4j.Logger;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("/spring-test/master.xml")
 public class BagItWatchServiceIT {
 
     private static Logger logger = getLogger(BagItWatchServiceIT.class);
 
-    @Inject
     Repository repo;
+
+    @Before
+    public void setUp() throws RepositoryException {
+        repo = new JcrRepositoryFactory().getRepository("file:/src/test/resources/test_repository.json", "repo");
+    }
+
 
     @Test
     public void tryFilesystemUpdates() throws Exception {
