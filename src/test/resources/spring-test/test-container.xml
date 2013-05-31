@@ -6,6 +6,7 @@
   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
   <context:property-placeholder/>
+  <context:annotation-config/>
 
   <!-- show stack traces for easier debugging -->
   <bean id="wildcardExceptionmapper" class="org.fcrepo.exceptionhandlers.WildcardExceptionMapper" >
@@ -15,7 +16,7 @@
   <bean id="containerWrapper" class="org.fcrepo.test.util.ContainerWrapper" init-method="start" destroy-method="stop" >
     <property name="port" value="${test.port:8080}"/>
     <property name="contextConfigLocations" value="classpath:spring-test/master.xml" />
-    <property name="packagesToScan" value="org.fcrepo.api, org.fcrepo.exceptionhandlers" />
+    <property name="packagesToScan" value="org.fcrepo.api, org.fcrepo.exceptionhandlers, org.fcrepo.responses" />
   </bean>
   
 </beans>

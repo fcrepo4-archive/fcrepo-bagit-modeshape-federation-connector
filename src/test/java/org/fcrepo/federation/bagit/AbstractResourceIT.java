@@ -9,11 +9,11 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.util.EntityUtils;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -56,31 +56,13 @@ public abstract class AbstractResourceIT {
         return new HttpPost(serverAddress + "objects/" + pid);
     }
 
-    protected static HttpPost
-            postObjMethod(final String pid, final String query) {
-        if (query == null || query.equals("")) {
-            return new HttpPost(serverAddress + "objects/" + pid);
-        } else {
-            return new HttpPost(serverAddress + "objects/" + pid + "?" + query);
-        }
-    }
-
     protected static HttpPost postDSMethod(final String pid, final String ds,
             final String content) throws UnsupportedEncodingException {
         final HttpPost post =
-                new HttpPost(serverAddress + "objects/" + pid +
-                        "/datastreams/" + ds);
+                new HttpPost(serverAddress + "objects/" + pid + "/" + ds +
+                        "/fcr:content");
         post.setEntity(new StringEntity(content));
         return post;
-    }
-
-    protected static HttpPut putDSMethod(final String pid, final String ds,
-            final String content) throws UnsupportedEncodingException {
-        final HttpPut put =
-                new HttpPut(serverAddress + "objects/" + pid + "/datastreams/" +
-                        ds);
-        put.setEntity(new StringEntity(content));
-        return put;
     }
 
     protected HttpResponse execute(final HttpUriRequest method)
@@ -92,6 +74,11 @@ public abstract class AbstractResourceIT {
 
     protected int getStatus(final HttpUriRequest method)
             throws ClientProtocolException, IOException {
-        return execute(method).getStatusLine().getStatusCode();
+        HttpResponse response = execute(method);
+        int result = response.getStatusLine().getStatusCode();
+        if (!(result > 199) || !(result < 400)) {
+            logger.warn(EntityUtils.toString(response.getEntity()));
+        }
+        return result;
     }
 }
