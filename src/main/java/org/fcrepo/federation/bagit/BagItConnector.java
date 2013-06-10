@@ -11,6 +11,8 @@ import gov.loc.repository.bagit.v0_97.impl.BagConstantsImpl;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -29,9 +31,10 @@ import org.modeshape.jcr.JcrI18n;
 import org.modeshape.jcr.api.JcrConstants;
 import org.modeshape.jcr.api.nodetype.NodeTypeManager;
 import org.modeshape.jcr.cache.DocumentStoreException;
+import org.modeshape.jcr.federation.spi.ConnectorChangeSet;
 import org.modeshape.jcr.federation.spi.DocumentChanges;
+import org.modeshape.jcr.federation.spi.DocumentReader;
 import org.modeshape.jcr.federation.spi.DocumentWriter;
-import org.modeshape.jcr.federation.spi.change.ConnectorChangedSet;
 import org.modeshape.jcr.value.BinaryValue;
 import org.modeshape.jcr.value.PropertyFactory;
 import org.modeshape.jcr.value.ValueFactories;
@@ -82,6 +85,8 @@ public class BagItConnector extends FileSystemConnector {
     // it appears to be the case that bootstrapping the federated nodes results in a pre-init call to the connector
     // so this is a dummy file for that situation
     private File m_directory = TempFile.createTempFile("stub", "stub");
+
+    private Path rootPath;
 
     /**
      * A string that is created in the {@link #initialize(NamespaceRegistry, NodeTypeManager)} method that represents the absolute
@@ -135,6 +140,8 @@ public class BagItConnector extends FileSystemConnector {
         directoryAbsolutePathLength =
                 directoryAbsolutePath.length() - File.separator.length(); // does NOT include the separator
 
+        rootPath = Paths.get(directoryAbsolutePath);
+
         setExtraPropertiesStore(new BagItExtraPropertiesStore(this));
         getLogger().trace("Initialized.");
         final BlockingQueue<Runnable> workQueue =
@@ -155,11 +162,11 @@ public class BagItConnector extends FileSystemConnector {
     @Override
     public Document getDocumentById(final String id) {
         getLogger().trace("Entering getDocumentById()...");
-        getLogger().debug("Received request for document: " + id);
+        getLogger().trace("Received request for document: " + id);
         final File file = fileFor(id);
-        getLogger().debug(
-                "Received request for document: " + id + ", resolved to " +
-                        file);
+        //getLogger().debug(
+                //"Received request for document: " + id + ", resolved to " +
+                 //       file);
         if (file == null || isExcluded(file) || !file.exists()) {
             return null;
         }
@@ -168,7 +175,7 @@ public class BagItConnector extends FileSystemConnector {
         final DocumentWriter writer = newDocument(id);
         File parentFile = file.getParentFile();
         if (isRoot) {
-            getLogger().debug(
+            getLogger().trace(
                     "Determined document: " + id +
                             " to be the projection root.");
             writer.setPrimaryType(NT_FOLDER);
@@ -189,7 +196,7 @@ public class BagItConnector extends FileSystemConnector {
                 }
             }
         } else if (isResource) {
-            getLogger().debug(
+            getLogger().trace(
                     "Determined document: " + id + " to be a binary resource.");
             final BinaryValue binaryValue = binaryFor(file);
             writer.setPrimaryType(NT_RESOURCE);
@@ -215,8 +222,8 @@ public class BagItConnector extends FileSystemConnector {
             writer.setNotQueryable();
             parentFile = file;
         } else if (file.isFile()) {
-            getLogger().debug(
-                    "Determined document: " + id + " to be a datastream.");
+            getLogger().trace(
+                   "Determined document: " + id + " to be a datastream.");
             writer.setPrimaryType(JcrConstants.NT_FILE);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
                     .create(file.lastModified()));
@@ -230,12 +237,12 @@ public class BagItConnector extends FileSystemConnector {
                     isRoot ? JCR_CONTENT_SUFFIX : id + JCR_CONTENT_SUFFIX;
             writer.addChild(childId, JCR_CONTENT);
         } else {
-            getLogger().debug(
+            getLogger().trace(
                     "Determined document: " + id + " to be a Fedora object.");
             final File dataDir =
                     new File(new File(file.getAbsolutePath()), "data");
             getLogger()
-                    .debug("searching data dir " + dataDir.getAbsolutePath());
+                    .trace("searching data dir " + dataDir.getAbsolutePath());
             writer.setPrimaryType(NT_FOLDER);
             writer.addMixinType(BAGIT_ARCHIVE_TYPE);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
@@ -307,7 +314,7 @@ public class BagItConnector extends FileSystemConnector {
             id = id.substring(0, id.length() - JCR_CONTENT_SUFFIX_LENGTH);
         }
         if ("".equals(id)) {
-            getLogger().debug(
+            getLogger().trace(
                     "#fileFor returning root directory for \"" + id + "\"");
             return this.m_directory; // root node
         }
@@ -327,7 +334,7 @@ public class BagItConnector extends FileSystemConnector {
         final File result =
                 new File(this.m_directory, id.replace(JCR_PATH_DELIMITER_CHAR,
                         File.separatorChar));
-        getLogger().debug(result.getAbsolutePath());
+        getLogger().trace(result.getAbsolutePath());
         //return super.fileFor(id);
         return result;
     }
@@ -381,7 +388,7 @@ public class BagItConnector extends FileSystemConnector {
             id = JCR_PATH_DELIMITER;
         }
         assert id.startsWith(JCR_PATH_DELIMITER);
-        System.out.println("idFor = " + id);
+        //System.out.println("idFor = " + id);
         return id;
     }
 
@@ -407,8 +414,32 @@ public class BagItConnector extends FileSystemConnector {
         return result;
     }
 
-    @Override
-    protected ConnectorChangedSet newConnectorChangedSet() {
-        return super.newConnectorChangedSet();
+    /**
+     * Sends a change set with a new node event for the bag.
+     * @param p the path to the bag folder
+     */
+    protected void fireNewBagEvent(Path path) {
+    	ConnectorChangeSet changes = newConnectorChangedSet();
+    	String key = idFor(path.toFile());
+    	Document doc = getDocumentById(key);
+    	DocumentReader reader = readDocument(doc);
+    	getLogger().debug("firing new bag node event with\n\tkey {0}\n\tpathToNode {1}",
+    			key, key);
+    	changes.nodeCreated(key,
+    			"/",
+    			key, reader.getProperties());
+    	changes.publish(null);
     }
+
+	/**
+	 * @param path the path of the bag folder
+	 */
+	public void fireRemoveBagEvent(Path path) {
+    	ConnectorChangeSet changes = newConnectorChangedSet();
+    	String key = idFor(path.toFile());
+    	getLogger().debug("firing remove bag node event with\n\tkey {0}\n\tpathToNode {1}",
+    			key, key);
+    	changes.nodeRemoved(key, "/", key);
+    	changes.publish(null);
+	}
 }

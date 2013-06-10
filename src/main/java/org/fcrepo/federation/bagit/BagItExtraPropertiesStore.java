@@ -78,10 +78,10 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
 
         final BagInfo bagInfo = connector.getBagInfo(id);
         if (bagInfo == null) {
-            logger.debug("No bag-info.txt for " + id);
+        	if(!"/".equals(id)) logger.trace("No bag-info.txt for " + id);
             return EMPTY;
         }
-        logger.debug("Operating on bagInfoFile(" + id + "):" +
+        logger.trace("Operating on bagInfoFile(" + id + "):" +
                 bagInfo.getFilepath());
         try {
             return bagInfo.getProperties();
