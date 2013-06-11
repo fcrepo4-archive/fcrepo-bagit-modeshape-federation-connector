@@ -25,6 +25,7 @@ import javax.jcr.observation.ObservationManager;
 
 import org.apache.commons.io.FileUtils;
 import org.fcrepo.federation.bagit.LoggingEventListener.EventLogger;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -37,59 +38,79 @@ public class ManifestMonitorIT {
 
     Repository repo;
 
+    Session listenerSession;
+
+
+    final File baseDir = new File("./target/test-classes");
+    final File srcDir = new File(baseDir, "tmp-objects");
+    final File dstDir = new File(baseDir, "test-objects");
+    File dstBag = new File(dstDir, "randomBag0");
+
     @Before
-    public void setUp() throws RepositoryException {
+    public void setUp() throws RepositoryException, IOException {
+    	if(dstBag.exists()) FileUtils.deleteDirectory(dstBag);
         repo = new JcrRepositoryFactory().getRepository("file:/src/test/resources/test_repository.json", "repo");
+		listenerSession = this.repo.login("default");
+    }
+
+    @After
+    public void after() throws IOException {
+    	if(listenerSession != null) listenerSession.logout();
+    	if(dstBag.exists()) FileUtils.deleteDirectory(dstBag);
     }
 
 
     @Test
     public void testEventsReceived() throws Exception {
-    	// event listener settings and session
-        Session listenerSession = repo.login("default");
-        ObservationManager observationManager = listenerSession.getWorkspace().getObservationManager();
-        boolean isDeep = true; // if outputPath is ancestor of the sequencer output, false if identical
-        String[] uuids = null; // Don't care about UUIDs of nodes for sequencing events
-        String[] nodeTypes = null; // Don't care about node types of output nodes for sequencing events
-        boolean noLocal = false; // We do want events for sequencing happen locally (as well as remotely)
-
         // Now create a listener implementation that will be called for our bag created event..
         CountDownLatch addlatch = new CountDownLatch(1);
-        EventLogger addlogger = Mockito.mock(LoggingEventListener.EventLogger.class);
-        LoggingEventListener addlistener = new LoggingEventListener(addlatch, addlogger);
-        String outputPath = "/objects";
-        observationManager.addEventListener(addlistener,Event.NODE_ADDED,outputPath,isDeep,
-                                            uuids, nodeTypes, noLocal);
+        EventLogger addlogger = getEventLogger(addlatch, Event.NODE_ADDED);
+        CountDownLatch updateLatch = new CountDownLatch(1);
+        EventLogger updateLogger = getEventLogger(updateLatch, Event.PROPERTY_CHANGED);
+        CountDownLatch dellatch = new CountDownLatch(1);
+        EventLogger dellogger = getEventLogger(dellatch, Event.NODE_REMOVED);
+
         // create a random bag and move it into the federated directory
-        final File baseDir = new File("./target/test-classes");
-        final File srcDir = new File(baseDir, "tmp-objects");
-        final File dstDir = new File(baseDir, "test-objects");
         final long fileSize = 1024L;
         makeRandomBags(srcDir, 1, 1, fileSize);
         final File srcBag = new File(srcDir, "randomBag0");
-        final File dstBag = new File(dstDir, "randomBag0");
         srcBag.renameTo(dstBag);
         addlatch.await(15, TimeUnit.SECONDS);
         verify(addlogger, times(1)).log(Mockito.eq(Event.NODE_ADDED), Mockito.eq("/objects/randomBag0"));
 
-        // FIXME test bag update event
-        //logger.debug("Now try tinkering with a manifest");
-        //final File bagInfo = new File(dstBag, "bag-info.txt");
+        // test bag update event
+        final File bagInfo = new File(dstBag, "manifest-md5.txt");
+        bagInfo.setLastModified(System.currentTimeMillis());
+        updateLatch.await(15, TimeUnit.SECONDS);
+        verify(updateLogger, times(1)).log(Mockito.eq(Event.PROPERTY_CHANGED), Mockito.startsWith("/objects/randomBag0"));
 
         // Test bag remove event
-        CountDownLatch dellatch = new CountDownLatch(1);
-        EventLogger dellogger = Mockito.mock(LoggingEventListener.EventLogger.class);
-        LoggingEventListener dellistener = new LoggingEventListener(dellatch, dellogger);
-        observationManager.addEventListener(dellistener,Event.NODE_REMOVED,outputPath,isDeep,
-                                            uuids, nodeTypes, noLocal);
         FileUtils.deleteDirectory(dstBag);
-        dellatch.await(30, TimeUnit.SECONDS);
-        verify(dellogger, times(1)).log(Mockito.eq(Event.NODE_REMOVED), Mockito.eq("/objects/randomBag0"));
-
-        listenerSession.logout();
+        logger.debug("deleted directory: "+dstBag.getAbsolutePath());
+        dellatch.await(15, TimeUnit.SECONDS);
+        verify(dellogger, Mockito.atLeastOnce()).log(Mockito.eq(Event.NODE_REMOVED), Mockito.eq("/objects/randomBag0"));
     }
 
-    static void makeRandomBags(final File baseDir, final int bagCount,
+    /**
+	 * @param addlatch
+	 * @return
+	 */
+	private EventLogger getEventLogger(CountDownLatch latch, int eventTypes) throws RepositoryException {
+        ObservationManager observationManager = this.listenerSession.getWorkspace().getObservationManager();
+        boolean isDeep = true; // if outputPath is ancestor of the sequencer output, false if identical
+        String[] uuids = null; // Don't care about UUIDs of nodes for sequencing events
+        String[] nodeTypes = null; // Don't care about node types of output nodes for sequencing events
+        boolean noLocal = false; // We do want events for sequencing happen locally (as well as remotely)
+        EventLogger result = Mockito.mock(LoggingEventListener.EventLogger.class);
+        LoggingEventListener addlistener = new LoggingEventListener(latch, result);
+        String outputPath = "/objects";
+        observationManager.addEventListener(addlistener,eventTypes,outputPath,isDeep,
+                                            uuids, nodeTypes, noLocal);
+		return result;
+	}
+
+
+	static void makeRandomBags(final File baseDir, final int bagCount,
             final int fileCount, final long fileSize) throws IOException {
         final BagFactory factory = new BagFactory();
         final DefaultCompleter completer = new DefaultCompleter(factory);

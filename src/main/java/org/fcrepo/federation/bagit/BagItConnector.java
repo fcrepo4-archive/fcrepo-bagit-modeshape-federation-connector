@@ -28,16 +28,21 @@ import org.apache.poi.util.TempFile;
 import org.infinispan.schematic.document.Document;
 import org.modeshape.connector.filesystem.FileSystemConnector;
 import org.modeshape.jcr.JcrI18n;
+import org.modeshape.jcr.JcrLexicon;
 import org.modeshape.jcr.api.JcrConstants;
 import org.modeshape.jcr.api.nodetype.NodeTypeManager;
+import org.modeshape.jcr.api.value.DateTime;
 import org.modeshape.jcr.cache.DocumentStoreException;
 import org.modeshape.jcr.federation.spi.ConnectorChangeSet;
 import org.modeshape.jcr.federation.spi.DocumentChanges;
 import org.modeshape.jcr.federation.spi.DocumentReader;
 import org.modeshape.jcr.federation.spi.DocumentWriter;
 import org.modeshape.jcr.value.BinaryValue;
+import org.modeshape.jcr.value.Property;
 import org.modeshape.jcr.value.PropertyFactory;
+import org.modeshape.jcr.value.PropertyType;
 import org.modeshape.jcr.value.ValueFactories;
+import org.modeshape.jcr.value.basic.BasicPropertyFactory;
 
 public class BagItConnector extends FileSystemConnector {
 
@@ -442,4 +447,21 @@ public class BagItConnector extends FileSystemConnector {
     	changes.nodeRemoved(key, "/", key);
     	changes.publish(null);
 	}
+
+    /**
+     * Sends a change set with a new node event for the bag.
+     * @param p the path to the bag folder
+     */
+    protected void fireModifiedBagEvent(Path path) {
+    	ConnectorChangeSet changes = newConnectorChangedSet();
+    	String key = idFor(path.toFile());
+    	Document doc = getDocumentById(key);
+    	DocumentReader reader = readDocument(doc);
+    	getLogger().debug("firing modified bag node event with\n\tkey {0}\n\tpathToNode {1}",
+    			key, key);
+    	DateTime dt = this.factories().getDateFactory().create(System.currentTimeMillis()-10000);
+    	Property dtprop = new BasicPropertyFactory(factories()).create(JcrLexicon.CREATED, PropertyType.DATE, dt);
+    	changes.propertyChanged(key, key, reader.getProperty(JCR_CREATED), dtprop);
+    	changes.publish(null);
+    }
 }

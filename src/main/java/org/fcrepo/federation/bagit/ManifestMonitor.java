@@ -21,7 +21,9 @@ import java.util.List;
 import org.slf4j.Logger;
 
 /**
- * This class monitors a folder containing one or more bags for BagIt manifest events.
+ * This class monitors a folder containing one or more BagIt folders. It will fire node events via
+ * the BagItConnector whenever a manifest is detected or when it or the surrounding BagIt folder are removed.
+ *
  * @author Gregory Jansen, Esme Cowles
  *
  */
@@ -56,22 +58,21 @@ public class ManifestMonitor implements Runnable {
 			path.register(watchService, ENTRY_CREATE, ENTRY_DELETE,
 					ENTRY_MODIFY);
 			logger.info("started watching a bag: "+path.toAbsolutePath());
-			for (final File bagFile : path.toFile().listFiles()) {
-				Path bagPath = Paths.get(bagFile.toURI());
-				if (ManifestUtil.isManifest(bagPath)) {
-					connector.fireNewBagEvent(path);
-					//bagPath.register(watchService, ENTRY_MODIFY);
-				} else if (ManifestUtil.isTagManifest(bagPath)) {
-//					for (final File listedFile : ManifestUtil.getFilesFromManifest
-//							.apply(bagFile)) {
-//						monitorTagFile(listedFile);
-//					}
-				}
-			}
+			if(containsManifest(path)) connector.fireNewBagEvent(path);
 		} catch (IOException e) {
 			logger.warn("Cannot watch bag: " + path.toAbsolutePath(),
 					e);
 		}
+	}
+
+	private boolean containsManifest(Path path) {
+		for (final File bagFile : path.toFile().listFiles()) {
+			Path bagPath = Paths.get(bagFile.toURI());
+			if (ManifestUtil.isManifest(bagPath)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -80,14 +81,14 @@ public class ManifestMonitor implements Runnable {
 		this.bagItDir = Paths.get(connector.getBagItDirectory().toURI());
 		try {
 			this.watchService = FileSystems.getDefault().newWatchService();
+			this.bagItDir.register(watchService, ENTRY_CREATE, ENTRY_MODIFY,
+					ENTRY_DELETE);
 			for (final File file : bagItDir.toFile().listFiles()) {
 				if (file.isDirectory()) {
 					Path path = Paths.get(file.toURI());
 					watchBag(path);
 				}
 			}
-			this.bagItDir.register(watchService, ENTRY_CREATE, ENTRY_MODIFY,
-					ENTRY_DELETE);
 		} catch (IOException e) {
 			throw new Error(
 					"Cannot set up the monitoring of a BagIt directory: " +
@@ -95,7 +96,7 @@ public class ManifestMonitor implements Runnable {
 		}
 		while (!this.shutdown) {
 			try {
-				final WatchKey key = watchService.poll(10, SECONDS);
+				final WatchKey key = watchService.poll(2, SECONDS);
 				if (key != null) {
 					final List<WatchEvent<?>> events = key.pollEvents();
 					Path parent = (Path)key.watchable();
@@ -112,17 +113,20 @@ public class ManifestMonitor implements Runnable {
 								watchBag(path);
 							} else if (ENTRY_DELETE == kind) { // removed bag
 								connector.fireRemoveBagEvent(path);
-								// remove watch?
 							} else if (ENTRY_MODIFY == kind) { // changed bag
-								// do nothing
+								logger.info("bag entry modified, sending modified node event for bag: "+path);
+								connector.fireModifiedBagEvent(path);
 							}
 						} else if (ManifestUtil.isManifest(path)) {
 							if(ENTRY_CREATE == kind) {
-								logger.info("new manifest, send new node event for bag: "+path);
+								logger.info("new manifest, send new node event for bag: "+path.getParent());
 								connector.fireNewBagEvent(path.getParent());
 							} else if(ENTRY_DELETE == kind) {
-								logger.info("manifest gone, send remove node event for bag: "+path);
+								logger.info("manifest gone, send remove node event for bag: "+path.getParent());
 								connector.fireRemoveBagEvent(path.getParent());
+							} else if(ENTRY_MODIFY == kind) {
+								logger.info("manifest modified, sending modified node event for bag: "+path.getParent());
+								connector.fireModifiedBagEvent(path.getParent());
 							}
 							//final Boolean manifest = true;
 						} else if (ManifestUtil.isTagManifest(path)) {
@@ -131,7 +135,7 @@ public class ManifestMonitor implements Runnable {
 							logger.warn("Unrecognized event at: "+ path.toAbsolutePath());
 						}
 					}
-
+					key.reset();
 				}
 			} catch (final InterruptedException e) {
 				logger.debug("Now ManifestMonitor.run() interrupted.");
