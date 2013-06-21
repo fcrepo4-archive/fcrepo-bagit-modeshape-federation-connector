@@ -148,7 +148,7 @@ public class BagItConnector extends FileSystemConnector {
         rootPath = Paths.get(directoryAbsolutePath);
 
         setExtraPropertiesStore(new BagItExtraPropertiesStore(this));
-        getLogger().trace("Initialized.");
+        getLogger().trace("Initialized. rootPath: {}", rootPath);
         final BlockingQueue<Runnable> workQueue =
                 new ArrayBlockingQueue<Runnable>(1);
         threadPool =
