@@ -41,8 +41,8 @@ public class BagItConnectorTest {
 
     @Before
     public void setUp() throws NoSuchFieldException, SecurityException,
-            IllegalArgumentException, IllegalAccessException,
-            RepositoryException, IOException {
+        IllegalArgumentException, IllegalAccessException, RepositoryException,
+        IOException {
         testObj = new BagItConnector();
         mockFactory = mock(DocumentWriterFactory.class);
         mockWriter = mock(DocumentWriter.class);

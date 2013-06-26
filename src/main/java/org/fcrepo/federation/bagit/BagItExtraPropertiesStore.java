@@ -16,8 +16,9 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * ExtraPropertiesStore implementation which stores properties in bag-info.txt.
+ * 
  * @see https://tools.ietf.org/html/draft-kunze-bagit-08#section-2.2.2
-**/
+ **/
 public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
 
     private static final Logger logger =
@@ -78,7 +79,7 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
 
         final BagInfo bagInfo = connector.getBagInfo(id);
         if (bagInfo == null) {
-        	if(!"/".equals(id)) logger.trace("No bag-info.txt for " + id);
+            if (!"/".equals(id)) logger.trace("No bag-info.txt for " + id);
             return EMPTY;
         }
         logger.trace("Operating on bagInfoFile(" + id + "):" +

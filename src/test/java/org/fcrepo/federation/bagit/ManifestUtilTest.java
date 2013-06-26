@@ -13,45 +13,45 @@ import org.junit.Test;
 
 public class ManifestUtilTest {
 
-	@Test
-	public void testIsManifest() throws IOException {
-		final File input = mock(File.class);
-		when(input.isFile()).thenReturn(true);
-		when(input.canRead()).thenReturn(true);
+    @Test
+    public void testIsManifest() throws IOException {
+        final File input = mock(File.class);
+        when(input.isFile()).thenReturn(true);
+        when(input.canRead()).thenReturn(true);
 
-		String fname = "not-a-manifest.txt";
-		when(input.getName()).thenReturn(fname);
-		assertFalse("\"" + fname + "\" should not be a valid manifest file",
-				ManifestUtil.isManifest(input));
-		fname = "manifest-md5.txt";
-		when(input.getName()).thenReturn(fname);
-		assertTrue("\"" + fname + "\" should be a valid manifest file",
-				ManifestUtil.isManifest(input));
-		fname = "manifest-foobar.txt";
-		when(input.getName()).thenReturn(fname);
-		assertFalse(
-				"Unexpected checksum algorithm \"foobar\" returned valid manifest",
-				ManifestUtil.isManifest(input));
-	}
+        String fname = "not-a-manifest.txt";
+        when(input.getName()).thenReturn(fname);
+        assertFalse("\"" + fname + "\" should not be a valid manifest file",
+                ManifestUtil.isManifest(input));
+        fname = "manifest-md5.txt";
+        when(input.getName()).thenReturn(fname);
+        assertTrue("\"" + fname + "\" should be a valid manifest file",
+                ManifestUtil.isManifest(input));
+        fname = "manifest-foobar.txt";
+        when(input.getName()).thenReturn(fname);
+        assertFalse(
+                "Unexpected checksum algorithm \"foobar\" returned valid manifest",
+                ManifestUtil.isManifest(input));
+    }
 
-	@Test
-	public void testIsTagManifest() throws IOException {
-		final File input = mock(File.class);
-		when(input.isFile()).thenReturn(true);
-		when(input.canRead()).thenReturn(true);
+    @Test
+    public void testIsTagManifest() throws IOException {
+        final File input = mock(File.class);
+        when(input.isFile()).thenReturn(true);
+        when(input.canRead()).thenReturn(true);
 
-		String fname = "not-a-manifest.txt";
-		when(input.getName()).thenReturn(fname);
-		assertFalse("\"" + fname + "\" should not be a valid manifest file",
-				ManifestUtil.isTagManifest(input));
-		fname = "tagmanifest-md5.txt";
-		when(input.getName()).thenReturn(fname);
-		assertTrue("\"" + fname + "\" should be a valid manifest file",
-				ManifestUtil.isTagManifest(input));
-		fname = "tagmanifest-foobar.txt";
-		when(input.getName()).thenReturn(fname);
-		assertFalse(
-				"Unexpected checksum algorithm \"foobar\" returned valid manifest",
-				ManifestUtil.isTagManifest(input));
-	}
+        String fname = "not-a-manifest.txt";
+        when(input.getName()).thenReturn(fname);
+        assertFalse("\"" + fname + "\" should not be a valid manifest file",
+                ManifestUtil.isTagManifest(input));
+        fname = "tagmanifest-md5.txt";
+        when(input.getName()).thenReturn(fname);
+        assertTrue("\"" + fname + "\" should be a valid manifest file",
+                ManifestUtil.isTagManifest(input));
+        fname = "tagmanifest-foobar.txt";
+        when(input.getName()).thenReturn(fname);
+        assertFalse(
+                "Unexpected checksum algorithm \"foobar\" returned valid manifest",
+                ManifestUtil.isTagManifest(input));
+    }
 }

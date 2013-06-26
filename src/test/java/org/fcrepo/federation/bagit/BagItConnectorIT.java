@@ -36,11 +36,16 @@ public class BagItConnectorIT {
     private static Logger logger = getLogger(BagItConnectorIT.class);
 
     Repository repo;
+
     JcrTools jcrTools;
 
     @Before
     public void setUp() throws RepositoryException {
-        repo = new JcrRepositoryFactory().getRepository("file:/src/test/resources/test_repository.json", "repo");
+        repo =
+                new JcrRepositoryFactory()
+                        .getRepository(
+                                "file:/src/test/resources/test_repository.json",
+                                "repo");
         jcrTools = new JcrTools();
     }
 

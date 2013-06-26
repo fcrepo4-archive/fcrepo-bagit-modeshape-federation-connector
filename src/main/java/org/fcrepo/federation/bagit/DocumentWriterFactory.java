@@ -6,10 +6,10 @@ import org.modeshape.jcr.federation.FederatedDocumentWriter;
 import org.modeshape.jcr.federation.spi.DocumentWriter;
 
 /**
- * This class really exists only to facilitate testing around some
- * cyclical dependencies in MODE
+ * This class really exists only to facilitate testing around some cyclical
+ * dependencies in MODE
+ * 
  * @author ba2213
- *
  */
 public class DocumentWriterFactory {
 

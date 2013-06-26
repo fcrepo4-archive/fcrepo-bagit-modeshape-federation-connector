@@ -8,8 +8,8 @@ import java.io.OutputStream;
 
 /**
  * Just a proxy to implement Closeable
+ * 
  * @author ba2213
- *
  */
 public class BagInfoTxtWriter extends BagInfoTxtWriterImpl implements Closeable {
 

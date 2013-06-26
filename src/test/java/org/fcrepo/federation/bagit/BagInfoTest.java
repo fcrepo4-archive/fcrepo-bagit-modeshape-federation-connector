@@ -68,7 +68,7 @@ public class BagInfoTest {
 
     @Test
     public void testDelete() throws IOException {
-        //nb: this does not save the changes to the file, that's done in save()
+        // nb: this does not save the changes to the file, that's done in save()
         final Property mockProp = mockProperty("Bag.Count", "2 of 5");
         when(mockPF.create(any(Name.class), eq("1 of 1"))).thenReturn(mockProp);
         assertEquals(1, testObj.getProperties().size());
@@ -115,5 +115,5 @@ public class BagInfoTest {
         return mockProp;
     }
 
-    //TODO Conversion methods that should be tested
+    // TODO Conversion methods that should be tested
 }

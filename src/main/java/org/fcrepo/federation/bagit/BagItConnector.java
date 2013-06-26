@@ -75,27 +75,33 @@ public class BagItConnector extends FileSystemConnector {
             .length();
 
     /**
-     * A boolean flag that specifies whether this connector should add the 'mix:mimeType' mixin to the 'nt:resource' nodes to
-     * include the 'jcr:mimeType' property. If set to <code>true</code>, the MIME type is computed immediately when the
-     * 'nt:resource' node is accessed, which might be expensive for larger files. This is <code>false</code> by default.
+     * A boolean flag that specifies whether this connector should add the
+     * 'mix:mimeType' mixin to the 'nt:resource' nodes to include the
+     * 'jcr:mimeType' property. If set to <code>true</code>, the MIME type is
+     * computed immediately when the 'nt:resource' node is accessed, which might
+     * be expensive for larger files. This is <code>false</code> by default.
      */
     private final boolean addMimeTypeMixin = false;
 
     /**
-     * The string path for a {@link File} object that represents the top-level directory accessed by this connector. This is set
-     * via reflection and is required for this connector.
+     * The string path for a {@link File} object that represents the top-level
+     * directory accessed by this connector. This is set via reflection and is
+     * required for this connector.
      */
     private String directoryPath;
 
-    // it appears to be the case that bootstrapping the federated nodes results in a pre-init call to the connector
+    // it appears to be the case that bootstrapping the federated nodes results
+    // in a pre-init call to the connector
     // so this is a dummy file for that situation
     private File m_directory = TempFile.createTempFile("stub", "stub");
 
     private Path rootPath;
 
     /**
-     * A string that is created in the {@link #initialize(NamespaceRegistry, NodeTypeManager)} method that represents the absolute
-     * path to the {@link #m_directory}. This path is removed from an absolute path of a file to obtain the ID of the node.
+     * A string that is created in the
+     * {@link #initialize(NamespaceRegistry, NodeTypeManager)} method that
+     * represents the absolute path to the {@link #m_directory}. This path is
+     * removed from an absolute path of a file to obtain the ID of the node.
      */
     private String directoryAbsolutePath;
 
@@ -118,9 +124,10 @@ public class BagItConnector extends FileSystemConnector {
     @Override
     public void initialize(final NamespaceRegistry registry,
             final NodeTypeManager nodeTypeManager) throws RepositoryException,
-            IOException {
+        IOException {
         getLogger().trace("Initializing at " + this.directoryPath + " ...");
-        // Initialize the directory path field that has been set via reflection when this method is called...
+        // Initialize the directory path field that has been set via reflection
+        // when this method is called...
         m_writerFactory = new DocumentWriterFactory(translator());
         checkFieldNotNull(directoryPath, "directoryPath");
         m_directory = new File(directoryPath);
@@ -143,7 +150,11 @@ public class BagItConnector extends FileSystemConnector {
             directoryAbsolutePath = directoryAbsolutePath + File.separator;
         }
         directoryAbsolutePathLength =
-                directoryAbsolutePath.length() - File.separator.length(); // does NOT include the separator
+                directoryAbsolutePath.length() - File.separator.length(); // does
+                                                                          // NOT
+                                                                          // include
+                                                                          // the
+                                                                          // separator
 
         rootPath = Paths.get(directoryAbsolutePath);
 
@@ -169,9 +180,9 @@ public class BagItConnector extends FileSystemConnector {
         getLogger().trace("Entering getDocumentById()...");
         getLogger().trace("Received request for document: " + id);
         final File file = fileFor(id);
-        //getLogger().debug(
-                //"Received request for document: " + id + ", resolved to " +
-                 //       file);
+        // getLogger().debug(
+        // "Received request for document: " + id + ", resolved to " +
+        // file);
         if (file == null || isExcluded(file) || !file.exists()) {
             return null;
         }
@@ -188,11 +199,14 @@ public class BagItConnector extends FileSystemConnector {
                     .create(file.lastModified()));
             writer.addProperty(JCR_CREATED_BY, null); // ignored
             for (final File child : file.listFiles()) {
-                // Only include as a datastream if we can access and read the file. Permissions might prevent us from
-                // reading the file, and the file might not exist if it is a broken symlink (see MODE-1768 for details).
+                // Only include as a datastream if we can access and read the
+                // file. Permissions might prevent us from
+                // reading the file, and the file might not exist if it is a
+                // broken symlink (see MODE-1768 for details).
                 if (child.exists() && child.canRead() &&
                         (child.isFile() || child.isDirectory())) {
-                    // We use identifiers that contain the file/directory name ...
+                    // We use identifiers that contain the file/directory name
+                    // ...
                     final String childName = child.getName();
                     final String childId =
                             isRoot ? File.separator + childName : id +
@@ -223,12 +237,13 @@ public class BagItConnector extends FileSystemConnector {
                     .create(file.lastModified()));
             writer.addProperty(JCR_LAST_MODIFIED_BY, null); // ignored
 
-            //make these binary not queryable. If we really want to query them, we need to switch to external binaries
+            // make these binary not queryable. If we really want to query them,
+            // we need to switch to external binaries
             writer.setNotQueryable();
             parentFile = file;
         } else if (file.isFile()) {
             getLogger().trace(
-                   "Determined document: " + id + " to be a datastream.");
+                    "Determined document: " + id + " to be a datastream.");
             writer.setPrimaryType(JcrConstants.NT_FILE);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
                     .create(file.lastModified()));
@@ -260,11 +275,14 @@ public class BagItConnector extends FileSystemConnector {
             }
             // get datastreams as children
             for (final File child : dataDir.listFiles()) {
-                // Only include as a datastream if we can access and read the file. Permissions might prevent us from
-                // reading the file, and the file might not exist if it is a broken symlink (see MODE-1768 for details).
+                // Only include as a datastream if we can access and read the
+                // file. Permissions might prevent us from
+                // reading the file, and the file might not exist if it is a
+                // broken symlink (see MODE-1768 for details).
                 if (child.exists() && child.canRead() &&
                         (child.isFile() || child.isDirectory())) {
-                    // We use identifiers that contain the file/directory name ...
+                    // We use identifiers that contain the file/directory name
+                    // ...
                     final String childName = child.getName();
                     final String childId =
                             isRoot ? File.separator + childName : id +
@@ -280,7 +298,8 @@ public class BagItConnector extends FileSystemConnector {
             writer.setParent(parentId);
         }
 
-        // Add the extra properties (if there are any), overwriting any properties with the same names
+        // Add the extra properties (if there are any), overwriting any
+        // properties with the same names
         // (e.g., jcr:primaryType, jcr:mixinTypes, jcr:mimeType, etc.) ...
         writer.addProperties(new BagItExtraPropertiesStore(this)
                 .getProperties(id));
@@ -333,14 +352,15 @@ public class BagItConnector extends FileSystemConnector {
         if (m.find()) {
             id =
                     id.replace(m.group(1), m.group(1) + JCR_PATH_DELIMITER +
-                            "data"); // because we're going to swap the delims out for the system seperator
+                            "data"); // because we're going to swap the delims
+                                     // out for the system seperator
         }
 
         final File result =
                 new File(this.m_directory, id.replace(JCR_PATH_DELIMITER_CHAR,
                         File.separatorChar));
         getLogger().trace(result.getAbsolutePath());
-        //return super.fileFor(id);
+        // return super.fileFor(id);
         return result;
     }
 
@@ -352,7 +372,7 @@ public class BagItConnector extends FileSystemConnector {
 
     @Override
     protected boolean isExcluded(final File file) {
-        //TODO this should check the data manifest
+        // TODO this should check the data manifest
         return file == null || !file.exists();
     }
 
@@ -384,16 +404,18 @@ public class BagItConnector extends FileSystemConnector {
         String id = path.substring(directoryAbsolutePathLength);
         id =
                 id.replace(File.separator + "data" + File.separator,
-                        File.separator); // data dir should be removed from the id of a DS node
+                        File.separator); // data dir should be removed from the
+                                         // id of a DS node
         if (id.endsWith(File.separator + "data")) {
-            id = id.substring(0, id.length() - 5); // might also be the parent file of a DS node
+            id = id.substring(0, id.length() - 5); // might also be the parent
+                                                   // file of a DS node
         }
         id = id.replace(File.separatorChar, JCR_PATH_DELIMITER_CHAR);
         if ("".equals(id)) {
             id = JCR_PATH_DELIMITER;
         }
         assert id.startsWith(JCR_PATH_DELIMITER);
-        //System.out.println("idFor = " + id);
+        // System.out.println("idFor = " + id);
         return id;
     }
 
@@ -410,7 +432,8 @@ public class BagItConnector extends FileSystemConnector {
         if (bagInfoFile == null) {
             return null;
         }
-        // really need to get the version from bagit.txt, but start with hard-coding
+        // really need to get the version from bagit.txt, but start with
+        // hard-coding
         final ValueFactories vf = getValueFactories();
         final BagInfo result =
                 new BagInfo(id, new FileBagFile(bagInfoFile.getAbsolutePath(),
@@ -421,47 +444,55 @@ public class BagItConnector extends FileSystemConnector {
 
     /**
      * Sends a change set with a new node event for the bag.
+     * 
      * @param p the path to the bag folder
      */
     protected void fireNewBagEvent(Path path) {
-    	ConnectorChangeSet changes = newConnectorChangedSet();
-    	String key = idFor(path.toFile());
-    	Document doc = getDocumentById(key);
-    	DocumentReader reader = readDocument(doc);
-    	getLogger().debug("firing new bag node event with\n\tkey {0}\n\tpathToNode {1}",
-    			key, key);
-    	changes.nodeCreated(key,
-    			"/",
-    			key, reader.getProperties());
-    	changes.publish(null);
+        ConnectorChangeSet changes = newConnectorChangedSet();
+        String key = idFor(path.toFile());
+        Document doc = getDocumentById(key);
+        DocumentReader reader = readDocument(doc);
+        getLogger().debug(
+                "firing new bag node event with\n\tkey {0}\n\tpathToNode {1}",
+                key, key);
+        changes.nodeCreated(key, "/", key, reader.getProperties());
+        changes.publish(null);
     }
 
-	/**
-	 * @param path the path of the bag folder
-	 */
-	public void fireRemoveBagEvent(Path path) {
-    	ConnectorChangeSet changes = newConnectorChangedSet();
-    	String key = idFor(path.toFile());
-    	getLogger().debug("firing remove bag node event with\n\tkey {0}\n\tpathToNode {1}",
-    			key, key);
-    	changes.nodeRemoved(key, "/", key);
-    	changes.publish(null);
-	}
+    /**
+     * @param path the path of the bag folder
+     */
+    public void fireRemoveBagEvent(Path path) {
+        ConnectorChangeSet changes = newConnectorChangedSet();
+        String key = idFor(path.toFile());
+        getLogger()
+                .debug("firing remove bag node event with\n\tkey {0}\n\tpathToNode {1}",
+                        key, key);
+        changes.nodeRemoved(key, "/", key);
+        changes.publish(null);
+    }
 
     /**
      * Sends a change set with a new node event for the bag.
+     * 
      * @param p the path to the bag folder
      */
     protected void fireModifiedBagEvent(Path path) {
-    	ConnectorChangeSet changes = newConnectorChangedSet();
-    	String key = idFor(path.toFile());
-    	Document doc = getDocumentById(key);
-    	DocumentReader reader = readDocument(doc);
-    	getLogger().debug("firing modified bag node event with\n\tkey {0}\n\tpathToNode {1}",
-    			key, key);
-    	DateTime dt = this.factories().getDateFactory().create(System.currentTimeMillis()-10000);
-    	Property dtprop = new BasicPropertyFactory(factories()).create(JcrLexicon.CREATED, PropertyType.DATE, dt);
-    	changes.propertyChanged(key, key, reader.getProperty(JCR_CREATED), dtprop);
-    	changes.publish(null);
+        ConnectorChangeSet changes = newConnectorChangedSet();
+        String key = idFor(path.toFile());
+        Document doc = getDocumentById(key);
+        DocumentReader reader = readDocument(doc);
+        getLogger()
+                .debug("firing modified bag node event with\n\tkey {0}\n\tpathToNode {1}",
+                        key, key);
+        DateTime dt =
+                this.factories().getDateFactory().create(
+                        System.currentTimeMillis() - 10000);
+        Property dtprop =
+                new BasicPropertyFactory(factories()).create(
+                        JcrLexicon.CREATED, PropertyType.DATE, dt);
+        changes.propertyChanged(key, key, reader.getProperty(JCR_CREATED),
+                dtprop);
+        changes.publish(null);
     }
 }
