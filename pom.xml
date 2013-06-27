@@ -11,6 +11,59 @@
   <description>Connects ModeShape to a filesystem directory containing BagIt directories.</description>
   <dependencies>
     <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.4</version>
+    </dependency>
+    <dependency>
+      <groupId>gov.loc</groupId>
+      <artifactId>bagit</artifactId>
+      <version>4.4</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+        <!-- Dependency convergence: bagit:4.4 declares a dependency on commons-codec:1.3 
+          but also has a transitive dependency (via httpclient:4.2.5) on commons-codec:1.6 -->
+        <exclusion>
+          <groupId>commons-codec</groupId>
+          <artifactId>commons-codec</artifactId>
+        </exclusion>
+        <!-- Dependency convergence: bagit:4.4 depends on commons-io:2.0.1 -->
+        <exclusion>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
+        </exclusion>
+        <!-- Dependency convergence: bagit:4.4 depends on jaxen:1.1.1 which itself 
+          depends on both jaxen:1.0-FCS and jaxen:1.1-beta-6 -->
+        <exclusion>
+          <groupId>jaxen</groupId>
+          <artifactId>jaxen</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- jaxen is only explicitly declared here because we had to exclude it from 
+      bagit:4.4 because its dependency convergence issue with jaxen:1.1.1 -->
+    <dependency>
+      <groupId>jaxen</groupId>
+      <artifactId>jaxen</artifactId>
+      <version>1.1.4</version>
+    </dependency>
+    <!-- jcl-over-slf4j is for bagit:4.4 -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.modeshape</groupId>
       <artifactId>modeshape-jcr</artifactId>
     </dependency>
@@ -42,13 +95,6 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.4</version>
-    </dependency>
-
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
